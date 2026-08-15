@@ -3,9 +3,8 @@ import { Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
-import type { CatalogItem, ContactInput, PassengerFormInput, SeatSelectionInput } from '../types/api';
+import type { ContactInput, PassengerFormInput, SeatSelectionInput, SelectedAncillary } from '../types/api';
 import { useBookingFlow } from '../hooks/useBookingFlow';
-import { ancillariesApi } from '../services/api-services';
 import PassengerStep from '../components/booking/PassengerStep';
 import SeatStep from '../components/booking/SeatStep';
 import ExtrasStep from '../components/booking/ExtrasStep';
@@ -21,12 +20,7 @@ const BookingPage: React.FC = () => {
   const [passengers, setPassengers] = useState<PassengerFormInput[]>([]);
   const [contact, setContact] = useState<ContactInput>({ full_name: '', email: '', phone: '' });
   const [seatSelections, setSeatSelections] = useState<SeatSelectionInput[]>([]);
-  const [ancillaryQuantities, setAncillaryQuantities] = useState<Map<number, number>>(new Map());
-  const [ancillaryCatalog, setAncillaryCatalog] = useState<CatalogItem[]>([]);
-
-  useEffect(() => {
-    ancillariesApi.getCatalog().then(setAncillaryCatalog).catch(() => {});
-  }, []);
+  const [ancillarySelections, setAncillarySelections] = useState<SelectedAncillary[]>([]);
 
   useEffect(() => {
     if (passengers.length > 0) return;
@@ -96,8 +90,9 @@ const BookingPage: React.FC = () => {
 
           {step === 2 && (
             <ExtrasStep
-              quantities={ancillaryQuantities}
-              onChange={setAncillaryQuantities}
+              segments={allSegments}
+              selections={ancillarySelections}
+              onChange={setAncillarySelections}
               onBack={() => setStep(1)}
               onNext={() => setStep(3)}
             />
@@ -112,8 +107,7 @@ const BookingPage: React.FC = () => {
               passengers={passengers}
               contact={contact}
               seatSelections={seatSelections}
-              ancillaryQuantities={ancillaryQuantities}
-              ancillaryCatalog={ancillaryCatalog}
+              ancillarySelections={ancillarySelections}
               onBack={() => setStep(2)}
               onSeatConflict={() => setStep(1)}
             />

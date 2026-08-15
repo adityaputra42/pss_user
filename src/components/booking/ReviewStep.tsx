@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Loader2, AlertCircle } from 'lucide-react';
 
 import type {
-  CatalogItem,
   ContactInput,
   Itinerary,
   PassengerFormInput,
   SeatSelectionInput,
+  SelectedAncillary,
 } from '../../types/api';
 import { bookingsApi, ancillariesApi, paymentsApi } from '../../services/api-services';
 import { formatMoney, formatDate, formatTime } from '../../utils/format';
@@ -22,8 +22,7 @@ interface ReviewStepProps {
   passengers: PassengerFormInput[];
   contact: ContactInput;
   seatSelections: SeatSelectionInput[];
-  ancillaryQuantities: Map<number, number>;
-  ancillaryCatalog: CatalogItem[];
+  ancillarySelections: SelectedAncillary[];
   onBack: () => void;
   onSeatConflict: () => void;
 }
@@ -36,8 +35,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   passengers,
   contact,
   seatSelections,
-  ancillaryQuantities,
-  ancillaryCatalog,
+  ancillarySelections,
   onBack,
   onSeatConflict,
 }) => {
@@ -54,10 +52,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     passengers.reduce((sum, p) => sum + Number(prices[p.passenger_type] ?? 0), 0);
 
   const ticketTotal = fareTotal(outboundFare.prices) + (returnFare ? fareTotal(returnFare.prices) : 0);
-  const ancillaryTotal = [...ancillaryQuantities.entries()].reduce((sum, [id, qty]) => {
-    const item = ancillaryCatalog.find((c) => c.ID === id);
-    return sum + Number(item?.CurrentPrice ?? 0) * qty;
-  }, 0);
+  const ancillaryTotal = ancillarySelections.reduce((sum, s) => sum + Number(s.unitPrice) * s.quantity, 0);
 
   const segmentsPayload = [
     ...outbound.segments.map((s) => ({ flight_id: s.flight_id, fare_class_id: outboundFareClassId })),
@@ -78,10 +73,17 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       if (!pnr) throw new Error('Booking could not be created.');
       setPnr(pnr);
 
-      // Ancillaries, PNR-level (see ancillary.ts note on why no passenger/segment id)
-      for (const [ancillaryId, quantity] of ancillaryQuantities.entries()) {
-        if (quantity <= 0) continue;
-        await ancillariesApi.purchase({ pnr_id: pnr.PNRID, ancillary_id: ancillaryId, quantity });
+      // flight_id is required here now -- it's the whitelist check
+      // (see ancillary.ts purchase() note). Each selection already
+      // knows which flight it was chosen for from ExtrasStep.
+      for (const sel of ancillarySelections) {
+        if (sel.quantity <= 0) continue;
+        await ancillariesApi.purchase({
+          pnr_id: pnr.PNRID,
+          ancillary_id: sel.ancillaryId,
+          flight_id: sel.flightId,
+          quantity: sel.quantity,
+        });
       }
 
       const payment = await paymentsApi.createPayment({ pnr_id: pnr.PNRID });
@@ -120,9 +122,13 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           <span className="text-sm font-medium">{formatMoney(ticketTotal, outboundFare.currency)}</span>
         </div>
         {ancillaryTotal > 0 && (
-          <div className="flex items-center justify-between mt-1">
-            <span className="text-sm text-muted">Extras</span>
-            <span className="text-sm font-medium">{formatMoney(ancillaryTotal, outboundFare.currency)}</span>
+          <div className="mt-1 space-y-1">
+            {ancillarySelections.map((s) => (
+              <div key={`${s.flightId}-${s.ancillaryId}`} className="flex items-center justify-between">
+                <span className="text-sm text-muted">{s.name} × {s.quantity}</span>
+                <span className="text-sm font-medium">{formatMoney(Number(s.unitPrice) * s.quantity, s.currency)}</span>
+              </div>
+            ))}
           </div>
         )}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">

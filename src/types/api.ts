@@ -76,7 +76,9 @@ export interface AircraftSeat {
   row_number: number;
   seat_letter: string;
   seat_class_id: number;
-  seat_type: string; // e.g. "WINDOW" | "MIDDLE" | "AISLE"
+  seat_type: string;
+  /** Index of seat_letter within its row-group's letter string at generation time (e.g. "ABCDEF" -> A=0..F=5). Does NOT account for aisle gaps -- there's no aisle marker from the backend, just consecutive indices. */
+  x_position: number | null;
   is_exit_row: boolean;
 }
 
@@ -84,6 +86,13 @@ export interface AircraftSeat {
 // FLIGHT / ITINERARY / SEARCH
 // ======================================================
 
+export interface SeatClass {
+  id: number;
+  code: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+}
 export interface Flight {
   id: number;
   schedule_id: number;
@@ -244,6 +253,8 @@ export interface CatalogItem {
   IsActive: boolean;
   CurrentPrice?: string | null;
   Currency?: string;
+  /** Only present from getFlightCatalog -- how many are left for that specific flight. Absent/null everywhere else. */
+  AvailableQuantity?: number | null;
 }
 
 /** booking_ancillaries row -- a purchased ancillary. */
@@ -260,11 +271,23 @@ export interface AncillaryPurchase {
   payment_status: 'UNPAID' | 'PAID' | string;
 }
 
-/** POST /ancillaries/purchases body. Public. */
+/** POST /ancillaries/purchases body. Public. flight_id is required in practice now -- see ancillary.ts purchase() note on why. */
 export interface PurchaseAncillaryInput {
   pnr_id: number;
   ancillary_id: number;
+  flight_id: number;
   passenger_id?: number;
   segment_id?: number;
   quantity: number;
+}
+
+/** One ancillary chosen for one specific flight, before it's actually purchased. */
+export interface SelectedAncillary {
+  flightId: number;
+  ancillaryId: number;
+  quantity: number;
+  /** Carried along so ReviewStep can total/display without re-fetching every flight's catalog. */
+  name: string;
+  unitPrice: string;
+  currency: string;
 }
