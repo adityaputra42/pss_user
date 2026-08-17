@@ -107,7 +107,7 @@ const ItineraryResultCard: React.FC<ItineraryResultCardProps> = ({
                     type="button"
                     onClick={() => onSelect(fare.fare_class_id)}
                     className={clsx(
-                      'text-left rounded-xl border p-3.5 transition-colors',
+                      'text-left rounded-md border p-3.5 transition-colors',
                       active ? 'border-primary bg-primary-soft' : 'border-slate-200 bg-white hover:border-primary/40',
                     )}
                   >

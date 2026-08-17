@@ -6,7 +6,7 @@ type Props = {
 
 export default function Skeleton({ className = 'h-20 w-full' }: Props) {
   return (
-    <div className="overflow-hidden rounded bg-gray-200">
+    <div className="overflow-hidden rounded-sm bg-gray-200">
       <motion.div
         className={`bg-gray-300 ${className}`}
         animate={{

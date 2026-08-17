@@ -14,6 +14,32 @@ export interface ListResponse<T> {
 }
 
 // ======================================================
+// AUTH (optional login -- see services/api-services/auth.ts)
+// ======================================================
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string;
+  role_id: number;
+  status: string;
+}
+
+export interface LoginResult {
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
+  user: AuthUser;
+}
+
+
+// ======================================================
 // PASSENGER TYPE (shared: fares, passengers, bookings)
 // ======================================================
 

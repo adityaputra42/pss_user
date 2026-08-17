@@ -53,7 +53,7 @@ const BookingPage: React.FC = () => {
           <div key={label} className="flex-1 flex items-center gap-2">
             <div
               className={clsx(
-                'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                'w-7 h-7 rounded-sm flex items-center justify-center text-xs font-bold shrink-0',
                 i < step ? 'bg-primary text-white' : i === step ? 'bg-primary-soft text-primary border-2 border-primary' : 'bg-slate-100 text-slate-400',
               )}
             >

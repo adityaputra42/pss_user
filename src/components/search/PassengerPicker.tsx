@@ -121,7 +121,7 @@ const PassengerPicker: React.FC<PassengerPickerProps> = ({
               z-9999
               mt-2
               w-72
-              rounded-xl
+              rounded-md
               border
               border-slate-200
               bg-white
@@ -189,7 +189,7 @@ const PassengerPicker: React.FC<PassengerPickerProps> = ({
                       className="
                         w-8
                         h-8
-                        rounded-full
+                        rounded-sm
                         border
                         border-slate-200
                         flex
@@ -223,7 +223,7 @@ const PassengerPicker: React.FC<PassengerPickerProps> = ({
                       className="
                         w-8
                         h-8
-                        rounded-full
+                        rounded-sm
                         border
                         border-slate-200
                         flex

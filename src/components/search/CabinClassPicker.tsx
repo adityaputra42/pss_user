@@ -114,12 +114,12 @@ const CabinClassPicker: React.FC<
       className="relative w-full"
     >
       {/* Label */}
-
+{/*
       <label className="block text-[11px] font-medium text-muted uppercase tracking-wide mb-1">
         Cabin Class
       </label>
 
-      {/* Trigger */}
+      Trigger */}
 
       <button
         type="button"
@@ -165,7 +165,7 @@ const CabinClassPicker: React.FC<
           ) : (
             <div>
               <div className="text-sm font-semibold text-slate-500">
-                Select cabin class
+                 Cabin Class
               </div>
 
               <div className="text-[11px] text-slate-400">
@@ -208,7 +208,7 @@ const CabinClassPicker: React.FC<
             right-0
             mt-2
             bg-white
-            rounded-2xl
+            rounded-md
             border
             border-slate-200
             shadow-xl
@@ -244,7 +244,7 @@ const CabinClassPicker: React.FC<
                       w-full
                       px-3
                       py-3
-                      rounded-xl
+                      rounded-md
                       flex
                       items-center
                       justify-between

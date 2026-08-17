@@ -78,7 +78,7 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
               key={i}
               onClick={() => setActiveSegment(i)}
               className={clsx(
-                'px-3.5 py-1.5 rounded-full text-xs font-semibold',
+                'px-3.5 py-1.5 rounded-sm text-xs font-semibold',
                 activeSegment === i ? 'bg-primary text-white' : 'bg-slate-100 text-muted',
               )}
             >
@@ -102,7 +102,7 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
                   key={i}
                   onClick={() => setActivePax(i)}
                   className={clsx(
-                    'px-3 py-1.5 rounded-full text-xs font-semibold border',
+                    'px-3 py-1.5 rounded-sm text-xs font-semibold border',
                     activePax === i ? 'border-primary text-primary bg-primary-soft' : 'border-slate-200 text-muted',
                     hasSeat && activePax !== i && 'border-emerald-200 text-emerald-600 bg-emerald-50',
                   )}
@@ -115,7 +115,7 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
         </div>
 
         {loading ? (
-          <Skeleton className="h-40 w-full rounded-xl" />
+          <Skeleton className="h-40 w-full rounded-md" />
         ) : (
           <SeatMap
             seats={seats}

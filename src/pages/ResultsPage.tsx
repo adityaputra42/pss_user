@@ -89,7 +89,7 @@ const ResultsPage: React.FC = () => {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+            <Skeleton key={i} className="h-24 w-full rounded-md" />
           ))}
         </div>
       ) : error ? (

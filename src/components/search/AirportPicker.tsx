@@ -180,7 +180,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
         {value ? (
           <>
             {/* Selected airport icon */}
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-sm bg-primary/10 flex items-center justify-center shrink-0">
               <Plane className="w-4 h-4 text-primary" />
             </div>
 
@@ -208,7 +208,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
               className="
                 w-7
                 h-7
-                rounded-full
+                rounded-sm
                 flex
                 items-center
                 justify-center
@@ -224,7 +224,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
         ) : (
           <>
             {/* Empty icon */}
-            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-sm bg-slate-100 flex items-center justify-center shrink-0">
               <Plane className="w-4 h-4 text-slate-400" />
             </div>
 
@@ -263,7 +263,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
             right-0
             mt-2
             bg-white
-            rounded-2xl
+            rounded-md
             border
             border-slate-200
             shadow-xl
@@ -301,7 +301,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
                   h-10
                   pl-9
                   pr-3
-                  rounded-lg
+                  rounded-sm
                   bg-slate-50
                   border
                   border-transparent
@@ -339,7 +339,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
                         w-full
                         px-3
                         py-3
-                        rounded-xl
+                        rounded-md
                         flex
                         items-center
                         gap-3
@@ -353,7 +353,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
                         className={`
                           w-10
                           h-10
-                          rounded-xl
+                          rounded-md
                           flex
                           items-center
                           justify-center
@@ -405,7 +405,7 @@ const AirportPicker: React.FC<AirportPickerProps> = ({
               )
             ) : (
               <div className="py-10 px-4 text-center">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                <div className="w-10 h-10 rounded-sm bg-slate-100 flex items-center justify-center mx-auto mb-3">
                   <Search className="w-4 h-4 text-slate-400" />
                 </div>
 

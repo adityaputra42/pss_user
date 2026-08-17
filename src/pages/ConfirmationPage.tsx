@@ -70,7 +70,7 @@ const ConfirmationPage: React.FC = () => {
             : 'Pay via the virtual account below. This page updates automatically once payment is received.'}
         </p>
 
-        <div className="bg-slate-50 rounded-xl p-4 mb-4">
+        <div className="bg-slate-50 rounded-md p-4 mb-4">
           <div className="text-[11px] text-muted uppercase tracking-wide mb-1">Booking code</div>
           <button onClick={copyCode} className="font-display font-bold text-2xl tracking-widest inline-flex items-center gap-2">
             {pnr.BookingCode}
@@ -80,7 +80,7 @@ const ConfirmationPage: React.FC = () => {
         </div>
 
         {!isPaid && (
-          <div className="text-left bg-primary-soft rounded-xl p-4 mb-4 space-y-2">
+          <div className="text-left bg-primary-soft rounded-md p-4 mb-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted">Virtual account</span>
               <span className="font-semibold">{payment.virtual_account_no || '—'}</span>
@@ -96,7 +96,7 @@ const ConfirmationPage: React.FC = () => {
           </div>
         )}
 
-        <div className="flex items-start gap-2 text-left text-xs text-muted bg-amber-50 border border-amber-100 rounded-lg p-3 mb-6">
+        <div className="flex items-start gap-2 text-left text-xs text-muted bg-amber-50 border border-amber-100 rounded-sm p-3 mb-6">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
           No account was created, so this page and your booking code are the only record of this trip -- there's
           nowhere else to look it up. Screenshot or write down the code above before you leave.
