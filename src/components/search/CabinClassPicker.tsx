@@ -113,13 +113,6 @@ const CabinClassPicker: React.FC<
       ref={containerRef}
       className="relative w-full"
     >
-      {/* Label */}
-{/*
-      <label className="block text-[11px] font-medium text-muted uppercase tracking-wide mb-1">
-        Cabin Class
-      </label>
-
-      Trigger */}
 
       <button
         type="button"
@@ -165,7 +158,7 @@ const CabinClassPicker: React.FC<
           ) : (
             <div>
               <div className="text-sm font-semibold text-slate-500">
-                 Cabin Class
+                Cabin Class
               </div>
 
               <div className="text-[11px] text-slate-400">

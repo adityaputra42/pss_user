@@ -9,7 +9,10 @@ interface PassengerStepProps {
   onNext: () => void;
 }
 
-const genders = ['MALE', 'FEMALE'];
+const genders: { code: string; label: string }[] = [
+  { code: 'M', label: 'Male' },
+  { code: 'F', label: 'Female' },
+];
 
 const PassengerStep: React.FC<PassengerStepProps> = ({ passengers, contact, onChangePassenger, onChangeContact, onNext }) => {
   const isComplete =
@@ -108,7 +111,7 @@ const PassengerStep: React.FC<PassengerStepProps> = ({ passengers, contact, onCh
                 >
                   <option value="">Select</option>
                   {genders.map((g) => (
-                    <option key={g} value={g}>{g === 'MALE' ? 'Male' : 'Female'}</option>
+                    <option key={g.code} value={g.code}>{g.label}</option>
                   ))}
                 </select>
               </div>

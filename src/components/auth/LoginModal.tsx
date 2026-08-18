@@ -68,7 +68,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-100 flex items-center justify-center px-5"
+          className="fixed inset-0 z-[100] flex items-center justify-center px-5"
         >
           <div className="absolute inset-0 bg-ink/50 backdrop-blur-sm" onClick={close} />
 

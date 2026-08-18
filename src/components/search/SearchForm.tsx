@@ -112,6 +112,10 @@ const [cabinClass, setCabinClass] =
     }
   };
 
+  // --------------------------------------------------
+  // Departure date
+  // --------------------------------------------------
+
   const handleDateChange = (
     value: string,
   ) => {
@@ -119,6 +123,8 @@ const [cabinClass, setCabinClass] =
 
     setError('');
 
+    // Return date tidak boleh lebih awal
+    // dari departure date.
     if (
       returnDate &&
       returnDate < value
@@ -126,11 +132,19 @@ const [cabinClass, setCabinClass] =
       setReturnDate('');
     }
   };
+
+  // --------------------------------------------------
+  // Submit
+  // --------------------------------------------------
+
   const submit = (
     e: React.FormEvent<HTMLFormElement>,
   ) => {
     e.preventDefault();
 
+    // ----------------------------------------------
+    // Validate airport
+    // ----------------------------------------------
 
     if (!from || !to) {
       setError(
@@ -139,12 +153,20 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
+    // ----------------------------------------------
+    // Validate same airport
+    // ----------------------------------------------
+
     if (from.id === to.id) {
       setError(
         "Departure and destination can't be the same airport.",
       );
       return;
     }
+
+    // ----------------------------------------------
+    // Validate return date
+    // ----------------------------------------------
 
     if (
       tripType === 'round_trip' &&
@@ -156,6 +178,10 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
+    // ----------------------------------------------
+    // Validate date
+    // ----------------------------------------------
+
     if (
       returnDate &&
       returnDate < date
@@ -166,6 +192,10 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
+    // ----------------------------------------------
+    // Validate infant
+    // ----------------------------------------------
+
     if (pax.infants > pax.adults) {
       setError(
         'Each infant must be accompanied by an adult.',
@@ -175,9 +205,15 @@ const [cabinClass, setCabinClass] =
 
     setError('');
 
+    // ----------------------------------------------
+    // Save passenger state
+    // ----------------------------------------------
 
     setTotalPax(pax);
 
+    // ----------------------------------------------
+    // Build query
+    // ----------------------------------------------
     const params = new URLSearchParams({
       from: String(from.id),
       to: String(to.id),
@@ -189,6 +225,9 @@ const [cabinClass, setCabinClass] =
       seatClassId: String(cabinClass?.id ?? ''),
     });
 
+    // ----------------------------------------------
+    // Return date only for round trip
+    // ----------------------------------------------
 
     if (tripType === 'round_trip') {
       params.set(
@@ -209,13 +248,13 @@ const [cabinClass, setCabinClass] =
   return (
     <form
       onSubmit={submit}
-      className="card"
+      className="card w-full"
     >
       {/* ==================================================
           TRIP TYPE
           ================================================== */}
 
-      <div className="flex items-center gap-1 px-5 pt-5">
+      <div className="flex items-center gap-1.5 px-5 pt-5">
         {(
           [
             'one_way',
