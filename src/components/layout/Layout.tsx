@@ -31,6 +31,7 @@ const footerLinks = {
     { label: 'How it works', href: '/#how-it-works' },
     { label: 'No-account promise', href: '/#search' },
   ],
+
   Support: [
     { label: 'Track a booking', href: '/' },
     { label: 'Refunds & changes', href: '/' },
@@ -49,16 +50,26 @@ const Layout: React.FC = () => {
   const user = useAuth((s) => s.user);
   const logout = useAuth((s) => s.logout);
 
+  /**
+   * Navbar hanya muncul di HomePage.
+   */
+  const isHomePage = location.pathname === '/';
+
   // ==================================================
   // SCROLL
   // ==================================================
 
   useEffect(() => {
+    if (!isHomePage) {
+      setScrolled(false);
+      return;
+    }
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 8);
 
-      // Close mobile menu when scrolling
-      if (window.scrollY > 8 && menuOpen) {
+      // Tutup mobile menu ketika user mulai scroll
+      if (window.scrollY > 8) {
         setMenuOpen(false);
       }
     };
@@ -70,7 +81,7 @@ const Layout: React.FC = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [menuOpen]);
+  }, [isHomePage]);
 
   // ==================================================
   // CLOSE MOBILE MENU ON ROUTE CHANGE
@@ -111,6 +122,34 @@ const Layout: React.FC = () => {
   };
 
   // ==================================================
+  // NAVBAR CLASS
+  // ==================================================
+
+  const navbarClassName = scrolled
+    ? `
+      bg-bg/95
+      backdrop-blur-xl
+      border
+      border-slate-200/70
+      shadow-lg
+      shadow-slate-900/5
+    `
+    : `
+      bg-white/10
+      backdrop-blur-md
+      border
+      border-white/20
+    `;
+
+  // ==================================================
+  // NAVBAR TEXT
+  // ==================================================
+
+  const navbarTextClassName = scrolled
+    ? 'text-ink'
+    : 'text-white';
+
+  // ==================================================
   // RENDER
   // ==================================================
 
@@ -118,381 +157,107 @@ const Layout: React.FC = () => {
     <div className="min-h-screen flex flex-col">
 
       {/* ==================================================
-          FLOATING NAVBAR
+          HOME NAVIGATION
           ================================================== */}
 
-      <header
-        className={`
-          fixed
-          top-3
-          left-1/2
-          -translate-x-1/2
-          z-50
+      {isHomePage && (
+        <div
+          className="
+            fixed
+            top-3
+            left-1/2
+            -translate-x-1/2
+            z-50
 
-          w-[calc(100%-1.5rem)]
-          sm:w-[calc(100%-2rem)]
-          max-w-6xl
+            w-[calc(100%-1.5rem)]
+            sm:w-[calc(100%-2rem)]
+            max-w-6xl
+          "
+        >
 
-          rounded-full
+          {/* ==================================================
+              NAVBAR
+              IMPORTANT:
+              Navbar dan mobile menu dipisahkan.
+              Jadi navbar tidak ikut membesar.
+              ================================================== */}
 
-          transition-all
-          duration-300
-          ease-out
+          <header
+            className={`
+              w-full
+              rounded-full
 
-          ${
-            scrolled
-              ? `
-                bg-bg/95
-                backdrop-blur-xl
-                border
-                border-slate-200/70
-                shadow-lg
-                shadow-slate-900/5
-              `
-              : `
-                bg-white/10
-                backdrop-blur-md
-                border
-                border-white/20
-              `
-          }
-        `}
-      >
+              transition-all
+              duration-300
+              ease-out
 
-        {/* ==================================================
-            NAVBAR MAIN
-            ================================================== */}
+              ${navbarClassName}
+            `}
+          >
+            <div className="px-4 sm:px-5 md:px-7">
+              <div className="h-14 md:h-16 flex items-center justify-between">
 
-        <div className="px-4 sm:px-5 md:px-7">
-          <div className="h-14 md:h-16 flex items-center justify-between">
+                {/* ==================================================
+                    LOGO
+                    ================================================== */}
 
-            {/* ==================================================
-                LOGO
-                ================================================== */}
-
-            <Link
-              to="/"
-              onClick={() => setMenuOpen(false)}
-              className="
-                flex
-                items-center
-                gap-2
-                font-display
-                font-bold
-                text-lg
-                tracking-tight
-                shrink-0
-              "
-            >
-              <span
-                className="
-                  w-8
-                  h-8
-                  rounded-full
-                  bg-primary
-                  text-white
-                  flex
-                  items-center
-                  justify-center
-                  shrink-0
-                "
-              >
-                <PlaneTakeoff className="w-4 h-4" />
-              </span>
-
-              <span
-                className={`
-                  transition-colors
-                  duration-300
-                  ${
-                    scrolled
-                      ? 'text-ink'
-                      : 'text-white'
-                  }
-                `}
-              >
-                Aviata
-              </span>
-            </Link>
-
-            {/* ==================================================
-                DESKTOP NAVIGATION
-                ================================================== */}
-
-            <nav className="hidden md:flex items-center gap-1">
-
-              {navLinks.map((link) => (
-                <button
-                  key={link.label}
-                  type="button"
-                  onClick={() => handleNavClick(link.href)}
-                  className={`
-                    px-4
-                    py-2
-                    rounded-full
-                    text-sm
-                    font-medium
-                    transition-all
-                    duration-200
-
-                    ${
-                      scrolled
-                        ? `
-                          text-ink
-                          hover:bg-slate-900/5
-                        `
-                        : `
-                          text-white
-                          hover:bg-white/10
-                        `
-                    }
-                  `}
+                <Link
+                  to="/"
+                  onClick={() => setMenuOpen(false)}
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    font-display
+                    font-bold
+                    text-lg
+                    tracking-tight
+                    shrink-0
+                  "
                 >
-                  {link.label}
-                </button>
-              ))}
-
-            </nav>
-
-            {/* ==================================================
-                DESKTOP AUTH
-                ================================================== */}
-
-            <div className="hidden md:flex items-center gap-3">
-
-              {user ? (
-
-                <div className="flex items-center gap-2">
-
-                  {/* User */}
                   <span
-                    className={`
-                      flex
-                      items-center
-                      gap-1.5
-                      text-sm
-                      font-semibold
-                      transition-colors
-
-                      ${
-                        scrolled
-                          ? 'text-ink'
-                          : 'text-white'
-                      }
-                    `}
-                  >
-                    <UserCircle
-                      className="
-                        w-4
-                        h-4
-                        text-primary
-                      "
-                    />
-
-                    {user.full_name.split(' ')[0]}
-                  </span>
-
-                  {/* Logout */}
-                  <button
-                    type="button"
-                    onClick={logout}
-                    title="Log out"
-                    className={`
-                      w-9
-                      h-9
+                    className="
+                      w-8
+                      h-8
                       rounded-full
+                      bg-primary
+                      text-white
                       flex
                       items-center
                       justify-center
-                      transition-all
+                      shrink-0
+                    "
+                  >
+                    <PlaneTakeoff className="w-4 h-4" />
+                  </span>
 
-                      ${
-                        scrolled
-                          ? `
-                            text-ink
-                            hover:bg-slate-900/5
-                          `
-                          : `
-                            text-white
-                            hover:bg-white/10
-                          `
-                      }
+                  <span
+                    className={`
+                      transition-colors
+                      duration-300
+                      ${navbarTextClassName}
                     `}
                   >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-
-                </div>
-
-              ) : (
-
-                <button
-                  type="button"
-                  onClick={() => setLoginOpen(true)}
-                  className="
-                    btn-secondary
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-
-                    text-sm
-                    font-semibold
-
-                    px-5
-                    py-2.5
-
-                    rounded-full
-
-                    shadow-sm
-
-                    transition-all
-                    duration-200
-
-                    hover:shadow-md
-                  "
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  Log in
-                </button>
-
-              )}
-
-            </div>
-
-            {/* ==================================================
-                MOBILE TOGGLE
-                ================================================== */}
-
-            <button
-              type="button"
-              onClick={() => setMenuOpen((value) => !value)}
-              aria-label="Toggle menu"
-              aria-expanded={menuOpen}
-              className={`
-                md:hidden
-
-                w-9
-                h-9
-
-                flex
-                items-center
-                justify-center
-
-                rounded-full
-
-                border
-
-                transition-all
-                duration-200
-
-                ${
-                  scrolled
-                    ? `
-                      border-slate-200
-                      text-ink
-                      hover:bg-slate-900/5
-                    `
-                    : `
-                      border-white/30
-                      text-white
-                      hover:bg-white/10
-                    `
-                }
-              `}
-            >
-              {menuOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <Menu className="w-4 h-4" />
-              )}
-            </button>
-
-          </div>
-        </div>
-
-        {/* ==================================================
-            MOBILE MENU
-            ================================================== */}
-
-        <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              initial={{
-                opacity: 0,
-                height: 0,
-                y: -5,
-              }}
-              animate={{
-                opacity: 1,
-                height: 'auto',
-                y: 0,
-              }}
-              exit={{
-                opacity: 0,
-                height: 0,
-                y: -5,
-              }}
-              transition={{
-                duration: 0.2,
-                ease: 'easeOut',
-              }}
-              className="md:hidden overflow-hidden"
-            >
-
-              {/* Menu Container */}
-              <div
-                className={`
-                  mx-2
-                  mb-2
-                  p-2
-
-                  rounded-2xl
-
-                  border
-
-                  ${
-                    scrolled
-                      ? `
-                        bg-bg
-                        border-slate-200/70
-                      `
-                      : `
-                        bg-slate-950/90
-                        border-white/10
-                        backdrop-blur-xl
-                      `
-                  }
-                `}
-              >
+                    Aviata
+                  </span>
+                </Link>
 
                 {/* ==================================================
-                    MOBILE NAV LINKS
+                    DESKTOP NAVIGATION
                     ================================================== */}
 
-                <nav className="flex flex-col gap-1">
-
+                <nav className="hidden md:flex items-center gap-1">
                   {navLinks.map((link) => (
                     <button
                       key={link.label}
                       type="button"
                       onClick={() => handleNavClick(link.href)}
                       className={`
-                        w-full
-
-                        flex
-                        items-center
-
-                        text-left
-
                         px-4
-                        py-3
-
-                        rounded-lg
-
+                        py-2
+                        rounded-full
                         text-sm
                         font-medium
-
                         transition-all
                         duration-200
 
@@ -512,173 +277,431 @@ const Layout: React.FC = () => {
                       {link.label}
                     </button>
                   ))}
-
                 </nav>
 
+                {/* ==================================================
+                    DESKTOP AUTH
+                    ================================================== */}
 
-                <div
-                  className={`
-                    my-2
-                    border-t
+                <div className="hidden md:flex items-center gap-3">
 
-                    ${
-                      scrolled
-                        ? 'border-slate-200/70'
-                        : 'border-white/10'
-                    }
-                  `}
-                />
+                  {user ? (
+                    <div className="flex items-center gap-2">
 
+                      <span
+                        className={`
+                          flex
+                          items-center
+                          gap-1.5
+                          text-sm
+                          font-semibold
+                          transition-colors
 
-                {user ? (
+                          ${navbarTextClassName}
+                        `}
+                      >
+                        <UserCircle
+                          className="
+                            w-4
+                            h-4
+                            text-primary
+                          "
+                        />
 
-                  <div className="flex items-center justify-between px-3 py-2">
+                        {user.full_name.split(' ')[0]}
+                      </span>
 
-                    <span
-                      className={`
+                      <button
+                        type="button"
+                        onClick={logout}
+                        title="Log out"
+                        className={`
+                          w-9
+                          h-9
+                          rounded-full
+                          flex
+                          items-center
+                          justify-center
+                          transition-all
+
+                          ${
+                            scrolled
+                              ? `
+                                text-ink
+                                hover:bg-slate-900/5
+                              `
+                              : `
+                                text-white
+                                hover:bg-white/10
+                              `
+                          }
+                        `}
+                      >
+                        <LogOut className="w-4 h-4" />
+                      </button>
+
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setLoginOpen(true)}
+                      className="
+                        btn-secondary
+
                         flex
                         items-center
-                        gap-1.5
+                        justify-center
+                        gap-2
 
                         text-sm
                         font-semibold
 
-                        ${
-                          scrolled
-                            ? 'text-ink'
-                            : 'text-white'
-                        }
-                      `}
-                    >
-                      <UserCircle
-                        className="
-                          w-4
-                          h-4
-                          text-primary
-                        "
-                      />
+                        px-5
+                        py-2.5
 
-                      {user.full_name}
-                    </span>
+                        rounded-full
 
-                    <button
-                      type="button"
-                      onClick={logout}
-                      className="
-                        btn-ghost
+                        shadow-sm
 
-                        flex
-                        items-center
-                        gap-1.5
+                        transition-all
+                        duration-200
 
-                        text-xs
-
-                        px-3
-                        py-2
-
-                        rounded-lg
+                        hover:shadow-md
                       "
                     >
-                      <LogOut className="w-3.5 h-3.5" />
-                      Log out
+                      <LogIn className="w-3.5 h-3.5" />
+                      Log in
                     </button>
+                  )}
 
-                  </div>
+                </div>
 
-                ) : (
+                {/* ==================================================
+                    MOBILE TOGGLE
+                    ================================================== */}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setLoginOpen(true);
-                    }}
-                    className="
-                      btn-secondary
-
-                      w-full
-
-                      flex
-                      items-center
-                      justify-center
-                      gap-2
-
-                      text-sm
-                      font-semibold
-
-                      px-4
-                      py-2.5
-
-                      mt-1
-
-                      rounded-4xl
-
-                      shadow-sm
-                    "
-                  >
-                    <LogIn className="w-3.5 h-3.5" />
-                    Log in
-                  </button>
-
-                )}
-
-
-                <div
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((value) => !value)}
+                  aria-label="Toggle menu"
+                  aria-expanded={menuOpen}
                   className={`
+                    md:hidden
+
+                    w-9
+                    h-9
+
                     flex
                     items-center
-                    gap-1.5
+                    justify-center
 
-                    text-xs
-                    font-medium
+                    rounded-full
 
-                    px-3
-                    pt-3
-                    pb-1
+                    border
+
+                    transition-all
+                    duration-200
 
                     ${
                       scrolled
-                        ? 'text-muted'
-                        : 'text-white/60'
+                        ? `
+                          border-slate-200
+                          text-ink
+                          hover:bg-slate-900/5
+                        `
+                        : `
+                          border-white/30
+                          text-white
+                          hover:bg-white/10
+                        `
                     }
                   `}
                 >
-                  <ShieldCheck
-                    className="
-                      w-3.5
-                      h-3.5
-                      text-primary
-                      shrink-0
-                    "
-                  />
-
-                  No account needed
-                </div>
+                  {menuOpen ? (
+                    <X className="w-4 h-4" />
+                  ) : (
+                    <Menu className="w-4 h-4" />
+                  )}
+                </button>
 
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </header>
 
-      </header>
+          {/* ==================================================
+              MOBILE MENU
+              TERPISAH DARI HEADER
+              ================================================== */}
 
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: -8,
+                  scale: 0.98,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  y: -8,
+                  scale: 0.98,
+                }}
+                transition={{
+                  duration: 0.18,
+                  ease: 'easeOut',
+                }}
+                className="
+                  md:hidden
+                  mt-2
+                  w-full
+                "
+              >
+                <div
+                  className={`
+                    w-full
+                    p-2
+                    rounded-2xl
+                    border
+                    shadow-xl
+
+                    ${
+                      scrolled
+                        ? `
+                          bg-bg/95
+                          backdrop-blur-xl
+                          border-slate-200/70
+                        `
+                        : `
+                          bg-slate-950/90
+                          backdrop-blur-xl
+                          border-white/10
+                        `
+                    }
+                  `}
+                >
+
+                  {/* ==================================================
+                      MOBILE NAV LINKS
+                      ================================================== */}
+
+                  <nav className="flex flex-col gap-1">
+                    {navLinks.map((link) => (
+                      <button
+                        key={link.label}
+                        type="button"
+                        onClick={() => handleNavClick(link.href)}
+                        className={`
+                          w-full
+
+                          flex
+                          items-center
+
+                          text-left
+
+                          px-4
+                          py-3
+
+                          rounded-lg
+
+                          text-sm
+                          font-medium
+
+                          transition-all
+                          duration-200
+
+                          ${
+                            scrolled
+                              ? `
+                                text-ink
+                                hover:bg-slate-900/5
+                              `
+                              : `
+                                text-white
+                                hover:bg-white/10
+                              `
+                          }
+                        `}
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                  </nav>
+
+                  {/* Divider */}
+                  <div
+                    className={`
+                      my-2
+                      border-t
+
+                      ${
+                        scrolled
+                          ? 'border-slate-200/70'
+                          : 'border-white/10'
+                      }
+                    `}
+                  />
+
+                  {/* ==================================================
+                      MOBILE AUTH
+                      ================================================== */}
+
+                  {user ? (
+                    <div className="flex items-center justify-between px-3 py-2">
+
+                      <span
+                        className={`
+                          flex
+                          items-center
+                          gap-1.5
+
+                          text-sm
+                          font-semibold
+
+                          ${navbarTextClassName}
+                        `}
+                      >
+                        <UserCircle
+                          className="
+                            w-4
+                            h-4
+                            text-primary
+                          "
+                        />
+
+                        {user.full_name}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={logout}
+                        className="
+                          btn-ghost
+
+                          flex
+                          items-center
+                          gap-1.5
+
+                          text-xs
+
+                          px-3
+                          py-2
+
+                          rounded-lg
+                        "
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Log out
+                      </button>
+
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setLoginOpen(true);
+                      }}
+                      className="
+                        btn-secondary
+
+                        w-full
+
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+
+                        text-sm
+                        font-semibold
+
+                        px-4
+                        py-2.5
+
+                        mt-1
+
+                        rounded-full
+
+                        shadow-sm
+                      "
+                    >
+                      <LogIn className="w-3.5 h-3.5" />
+                      Log in
+                    </button>
+                  )}
+
+                  {/* ==================================================
+                      NO ACCOUNT
+                      ================================================== */}
+
+                  <div
+                    className={`
+                      flex
+                      items-center
+                      gap-1.5
+
+                      text-xs
+                      font-medium
+
+                      px-3
+                      pt-3
+                      pb-1
+
+                      ${
+                        scrolled
+                          ? 'text-muted'
+                          : 'text-white/60'
+                      }
+                    `}
+                  >
+                    <ShieldCheck
+                      className="
+                        w-3.5
+                        h-3.5
+                        text-primary
+                        shrink-0
+                      "
+                    />
+
+                    No account needed
+                  </div>
+
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+        </div>
+      )}
+
+      {/* ==================================================
+          MAIN CONTENT
+          ================================================== */}
 
       <main className="flex-1">
-
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname}>
             <Outlet />
           </PageTransition>
         </AnimatePresence>
-
       </main>
 
+      {/* ==================================================
+          LOGIN MODAL
+          ================================================== */}
 
       <LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
       />
 
+      {/* ==================================================
+          FOOTER
+          ================================================== */}
 
       <footer className="mt-16 bg-ink text-white/70">
 
@@ -699,6 +722,9 @@ const Layout: React.FC = () => {
           "
         >
 
+          {/* ==================================================
+              BRAND
+              ================================================== */}
 
           <div className="md:col-span-2">
 
@@ -915,3 +941,4 @@ const Layout: React.FC = () => {
 };
 
 export default Layout;
+

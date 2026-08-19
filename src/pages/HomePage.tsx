@@ -9,8 +9,8 @@ import StaggerContainer from '../components/animations/StagerContainer';
 import StaggerItem from '../components/animations/StaggerItem';
 import Skeleton from '../components/animations/Skeleton';
 
-const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1800&q=80';
+const HERO_IMAGE ="/takeoff.webp"
+  // 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1800&q=80';
 
 const steps = [
   { icon: Search, title: 'Search', desc: 'Compare fares across every fare class for your route and date.' },
@@ -32,10 +32,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div>
-      {/* ==================================================
-          HEADER -- image, stacked with search form pinned
-          to the bottom-center edge
-          ================================================== */}
 
       <section className="relative -mt-16 overflow-hidden">
         <div className="absolute inset-0">
@@ -44,10 +40,10 @@ const HomePage: React.FC = () => {
             alt="Airplane wing above the clouds at golden hour"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-linear-to-b from-ink/75 via-ink/45 to-bg" />
+          <div className="absolute inset-0 bg-linear-to-b from-ink/5 via-ink/25 to-bg" />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-5 md:px-8 pt-32 md:pt-40 pb-36 md:pb-44 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-8 pt-32 md:pt-40 pb-36 md:pb-44 text-center">
           <FadeIn duration={0.5}>
             <p className="font-display text-xs font-semibold tracking-[0.2em] text-white/85 uppercase mb-4">
               Ready for take-off
@@ -64,7 +60,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Search form, stacked over the header image, anchored bottom-center */}
-      <section id="search" className="max-w-5xl mx-auto px-5 md:px-8 -mt-24 md:-mt-28 relative z-20">
+      <section id="search" className="max-w-6xl mx-auto px-5 md:px-8 -mt-24 md:-mt-28 relative z-20">
         {loading ? (
           <Skeleton className="h-40 w-full rounded-md" />
         ) : airports.length === 0 ? (
@@ -76,7 +72,7 @@ const HomePage: React.FC = () => {
         )}
       </section>
 
-      <section id="how-it-works" className="max-w-5xl mx-auto px-5 md:px-8 py-20">
+      <section id="how-it-works" className="max-w-6xl mx-auto px-5 md:px-8 py-20">
         <h2 className="font-display font-bold text-2xl md:text-3xl text-center mb-2">How booking works</h2>
         <p className="text-muted text-center mb-10">Four steps, in order -- no detours through a login screen.</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

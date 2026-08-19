@@ -9,6 +9,9 @@ interface PassengerStepProps {
   onNext: () => void;
 }
 
+// DB column pnr_passengers.gender is CHAR(1) -- must send exactly 'M' or 'F',
+// not the full word (that's what was blowing up with "value too long for
+// type character(1)" on POST /bookings/pnrs).
 const genders: { code: string; label: string }[] = [
   { code: 'M', label: 'Male' },
   { code: 'F', label: 'Female' },

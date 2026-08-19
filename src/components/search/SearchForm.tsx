@@ -248,7 +248,7 @@ const [cabinClass, setCabinClass] =
   return (
     <form
       onSubmit={submit}
-      className="card w-full"
+      className="card"
     >
       {/* ==================================================
           TRIP TYPE
