@@ -47,7 +47,8 @@ const ConfirmationPage: React.FC = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const isPaid = status === 'PAID';
+  const isBalancePayment = payment.channel === 'BALANCE';
+  const isPaid = status === 'PAID' || isBalancePayment;
 
   return (
     <div className="max-w-lg mx-auto px-5 md:px-8 py-10">

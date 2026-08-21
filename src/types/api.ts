@@ -252,10 +252,66 @@ export interface CreatePaymentResult {
   expired_at: string;
 }
 
-/** POST /payments body. Public. `channel` is the DOKU payment channel (e.g. "VIRTUAL_ACCOUNT_BCA", "QRIS"); leave unset for the default. */
+/** POST /payments body. Public. `channel` is the DOKU payment channel (e.g. "VIRTUAL_ACCOUNT_BCA", "QRIS"); leave unset for the default. `payment_method` defaults to "DOKU_VA" if omitted; "BALANCE" requires login AND that this PNR belongs to the logged-in user -- never offer BALANCE to a guest or for someone else's PNR, the backend rejects both. */
 export interface CreatePaymentInput {
   pnr_id: number;
   channel?: string;
+  payment_method?: 'DOKU_VA' | 'BALANCE';
+}
+
+// ======================================================
+// WALLET (login required for all of these -- see services/api-services/wallet.ts)
+// ======================================================
+
+export interface WalletBalance {
+  balance: string;
+  currency: string;
+}
+
+export interface WalletTransaction {
+  id: number;
+  type: 'TOPUP' | 'PAYMENT_DEBIT' | 'REFUND_CREDIT' | 'ADJUSTMENT';
+  amount: string;
+  balance_after: string;
+  reference_type?: string;
+  reference_id?: string;
+  description?: string;
+  created_at: string;
+}
+
+/** GET /wallet/transactions response shape -- NOT the shared ListResponse<T> (Items/Total, capitalized): this endpoint predates that convention and uses its own lowercase items/total/page/limit. */
+export interface WalletTransactionsResult {
+  items: WalletTransaction[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+/** POST /wallet/topup body. `channel` is the DOKU VA bank channel, same set as payments; leave unset for the default. */
+export interface TopupInput {
+  amount: number;
+  channel?: string;
+}
+
+export interface TopupResult {
+  topup_code: string;
+  virtual_account_no: string;
+  channel: string;
+  expired_at: string;
+  amount: string;
+  currency: string;
+}
+
+/** GET /wallet/topup/{code} -- poll this while waiting for the DOKU notification to land, same pattern as paymentsApi.getLatestPaymentByPnr. */
+export interface TopupStatus {
+  topup_code: string;
+  status: string; // PENDING, PAID, FAILED, EXPIRED
+  amount: string;
+  currency: string;
+  virtual_account_no?: string;
+  channel?: string;
+  expired_at?: string;
+  paid_at?: string;
 }
 
 // ======================================================
