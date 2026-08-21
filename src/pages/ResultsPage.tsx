@@ -62,7 +62,6 @@ const ResultsPage: React.FC = () => {
       })
       .catch((err) => setError(err?.response?.data?.message || 'Couldn\'t load flights. Try searching again.'))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departureAirportId, arrivalAirportId, date, tripType, returnDate]);
 
   const needsReturn = tripType === 'round_trip';

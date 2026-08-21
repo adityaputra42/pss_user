@@ -12,8 +12,6 @@ interface ItineraryResultCardProps {
   selectedFareClassId: number | null;
   onSelect: (fareClassId: number) => void;
 }
-
-/** Total for one fare across the passenger mix -- infants (INF) only cost something if the fare actually prices them; many fares don't. */
 const fareTotalForPax = (prices: Record<string, string>, pax: PaxCounts) => {
   const adt = Number(prices.ADT ?? 0) * pax.adults;
   const chd = Number(prices.CHD ?? 0) * pax.children;
@@ -32,7 +30,6 @@ const ItineraryResultCard: React.FC<ItineraryResultCardProps> = ({
   const first = itinerary.segments[0];
   const last = itinerary.segments[itinerary.segments.length - 1];
 
-  // Only fares that actually cover every passenger type in this search are sellable for it.
   const sellableFares = itinerary.fares.filter((f) =>
     (pax.adults > 0 ? f.prices.ADT != null : true) &&
     (pax.children > 0 ? f.prices.CHD != null : true) &&
@@ -56,7 +53,7 @@ const ItineraryResultCard: React.FC<ItineraryResultCardProps> = ({
             <div className="font-display font-bold text-lg">{formatTime(first.departure_time)}</div>
             <div className="text-xs text-muted">{first.departure_airport_code}</div>
           </div>
-          <div className="flex-1 flex flex-col items-center min-w-[80px]">
+          <div className="flex-1 flex flex-col items-center min-w-20">
             <div className="text-[11px] text-muted flex items-center gap-1">
               <Clock className="w-3 h-3" /> {formatDuration(itinerary.duration_minutes)}
             </div>

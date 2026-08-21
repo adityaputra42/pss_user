@@ -284,63 +284,64 @@ const [cabinClass, setCabinClass] =
       {/* ==================================================
           AIRPORT
           ================================================== */}
+<div className="p-5 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-3 md:gap-4 items-end">
+  {/* From */}
+  <AirportPicker
+    label="From"
+    airports={airports}
+    value={from}
+    onChange={(airport) => {
+      setFrom(airport);
+      setError('');
+    }}
+    excludeId={to?.id ?? null}
+    placeholder="Departure city"
+  />
 
-      <div className="p-5 grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-2 items-center">
-        {/* From */}
+  {/* Swap */}
+  <div className="hidden md:flex items-center justify-center pb-0">
+    <button
+      type="button"
+      onClick={swap}
+      className="
+        w-10
+        h-10
+        rounded-full
+        border
+        border-slate-200
+        bg-white
+        flex
+        items-center
+        justify-center
+        text-slate-400
+        shadow-sm
+        hover:text-primary
+        hover:border-primary/40
+        hover:bg-primary/5
+        hover:shadow-md
+        transition-all
+        duration-200
+      "
+      title="Swap departure and destination"
+      aria-label="Swap departure and destination"
+    >
+      <ArrowLeftRight className="w-4 h-4" />
+    </button>
+  </div>
 
-        <AirportPicker
-          label="From"
-          airports={airports}
-          value={from}
-          onChange={(airport) => {
-            setFrom(airport);
-            setError('');
-          }}
-          excludeId={to?.id ?? null}
-          placeholder="Departure city"
-        />
-
-        {/* Swap */}
-
-        <button
-          type="button"
-          onClick={swap}
-          className="
-            hidden
-            md:flex
-            mx-auto
-            w-9
-            h-9
-            rounded-sm
-            border
-            border-slate-200
-            items-center
-            justify-center
-            text-slate-400
-            hover:text-primary
-            hover:border-primary/40
-            transition-colors
-          "
-          title="Swap"
-        >
-          <ArrowLeftRight className="w-4 h-4" />
-        </button>
-
-        {/* To */}
-
-       <AirportPicker
-          label="To"
-          airports={airports}
-          value={to}
-          onChange={(airport) => {
-            setTo(airport);
-            setError('');
-          }}
-          excludeId={from?.id ?? null}
-          placeholder="Destination city"
-        />
-      </div>
-
+  {/* To */}
+  <AirportPicker
+    label="To"
+    airports={airports}
+    value={to}
+    onChange={(airport) => {
+      setTo(airport);
+      setError('');
+    }}
+    excludeId={from?.id ?? null}
+    placeholder="Destination city"
+  />
+</div>
       {/* ==================================================
           PERFORATION
           ================================================== */}
