@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import {  Link, useLocation, useNavigate, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   PlaneTakeoff,
@@ -46,7 +46,7 @@ const Layout: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
+  const outlet = useOutlet();
   const user = useAuth((state) => state.user);
   const logout = useAuth((state) => state.logout);
 
@@ -693,7 +693,7 @@ const Layout: React.FC = () => {
       >
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname}>
-            <Outlet />
+            {outlet}
           </PageTransition>
         </AnimatePresence>
       </main>

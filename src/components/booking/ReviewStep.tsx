@@ -48,6 +48,13 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   const [seatConflict, setSeatConflict] = useState(false);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
 
+  // Payment method choice: BALANCE is only ever offered to a logged-in
+  // person paying for the PNR they're about to create for themselves --
+  // never to a guest. This mirrors the backend's own rule exactly (see
+  // checkPNROwnershipForBalance server-side): there is no "pay on
+  // behalf" here, so a logged-in person always ends up owning the PNR
+  // they're currently building, and BALANCE is always valid for them
+  // once they have enough of it.
   const user = useAuth((s) => s.user);
   const [paymentMethod, setPaymentMethod] = useState<'DOKU_VA' | 'BALANCE'>('DOKU_VA');
   const [balance, setBalance] = useState<string | null>(null);
@@ -79,7 +86,13 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     setSeatConflict(false);
     setInsufficientBalance(false);
     try {
-
+      // On a retry after a payment-stage failure (e.g. 402 insufficient
+      // balance), the PNR and any ancillaries from the FIRST attempt
+      // already exist server-side -- re-running createBooking here
+      // would create a second, duplicate PNR against the same seats
+      // (and very likely 409 immediately, since attempt #1 already
+      // holds them). Reuse the PNR already sitting in the booking flow
+      // store instead, and go straight to retrying payment.
       let pnr = pnrInStore;
       if (!pnr) {
         pnr = await bookingsApi.createBooking({
@@ -91,7 +104,9 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         if (!pnr) throw new Error('Booking could not be created.');
         setPnr(pnr);
 
-
+        // flight_id is required here now -- it's the whitelist check
+        // (see ancillary.ts purchase() note). Each selection already
+        // knows which flight it was chosen for from ExtrasStep.
         for (const sel of ancillarySelections) {
           if (sel.quantity <= 0) continue;
           await ancillariesApi.purchase({
@@ -109,7 +124,11 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       const status = err?.response?.status;
       const message = err?.response?.data?.message || err?.message || 'Something went wrong -- please try again.';
       if (status === 409) setSeatConflict(true);
-    
+      // The booking (and any ancillaries) above already went through by
+      // the time a 402 can happen -- the PNR exists and is HOLD, just
+      // unpaid. Nudge toward DOKU instead of silently leaving them
+      // stuck on a method that will keep failing; the pnrInStore reuse
+      // above makes "press the button again" actually correct now.
       if (status === 402) {
         setInsufficientBalance(true);
         setPaymentMethod('DOKU_VA');
@@ -208,7 +227,10 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       )}
 
       {error && (
-        <div className="card p-4 border-red-200 bg-red-50/60 flex gap-2.5">
+        <div
+          className="rounded-md border border-red-200 p-4 bg-red-50/60 flex gap-2.5"
+          style={{ boxShadow: 'var(--shadow-card)' }}
+        >
           <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
           <div className="text-sm text-red-700">
             {seatConflict ? (

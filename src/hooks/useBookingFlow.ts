@@ -10,18 +10,26 @@ import type {
 } from '../types/api';
 
 interface BookingFlowState {
+  // -- Step 1: search context, kept so "back" doesn't lose it --
   totalPax: PaxCounts;
 
+  // -- Step 2: chosen itinerary/fare --
   outboundItinerary: Itinerary | null;
   outboundFareClassId: number | null;
   returnItinerary: Itinerary | null;
   returnFareClassId: number | null;
 
+  // -- Step 3: passengers + contact --
   passengers: PassengerFormInput[];
   contact: ContactInput | null;
 
+  // -- Step 4: seats, keyed "passengerIndex:segmentIndex" -> flight_seat_id --
   seatSelections: SeatSelectionInput[];
 
+  // -- Step 5: result of POST /bookings/pnrs. This IS the booking --
+  // there's no server-side lookup without login, so this object (plus
+  // whatever's shown right after payment) is the only record the guest
+  // has of their own trip.
   pnr: PNR | null;
 
   setTotalPax: (v: PaxCounts) => void;
@@ -46,6 +54,12 @@ const initial = {
   pnr: null,
 } satisfies Partial<BookingFlowState>;
 
+/**
+ * Persisted to sessionStorage (not localStorage) -- survives a page
+ * refresh mid-flow, but clears when the tab closes, which is the right
+ * lifetime for "no login, no tracked history": nothing here is meant
+ * to outlive the visit, only the current booking attempt.
+ */
 export const useBookingFlow = create<BookingFlowState>()(
   persist(
     (set) => ({

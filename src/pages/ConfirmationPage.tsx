@@ -47,6 +47,11 @@ const ConfirmationPage: React.FC = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // A BALANCE payment settles synchronously server-side (see
+  // CreatePaymentHandler.HandleBalance) -- by the time this page
+  // renders it's already PAID, there's no virtual account to wait on,
+  // and the polling loop above will simply confirm PAID on its first
+  // tick instead of transitioning into it.
   const isBalancePayment = payment.channel === 'BALANCE';
   const isPaid = status === 'PAID' || isBalancePayment;
 

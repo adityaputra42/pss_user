@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Wallet as WalletIcon,
   Plus,
@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Copy,
   CheckCircle2,
+  LogIn,
 } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
@@ -73,16 +74,28 @@ const WalletPage: React.FC = () => {
     }
   }, []);
 
+  // fetch-on-mount/on-dependency-change is the deliberate pattern here
+  // (same as ConfirmationPage's poll() and Layout.tsx's scroll-state
+  // effects elsewhere in this codebase); loadBalance's first line sets
+  // a loading flag before its await, which the rule can't distinguish
+  // from a genuine render loop even though [user] only changes on
+  // login/logout, not every render.
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadBalance();
   }, [user, loadBalance]);
 
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
     loadTransactions(page);
   }, [user, page, loadTransactions]);
 
+  // Poll the active topup's status until it settles, same pattern as
+  // ConfirmationPage polling a payment -- then refresh balance +
+  // transactions so the new TOPUP row and updated balance show up
+  // without the person having to reload the page.
   useEffect(() => {
     if (!activeTopup) return;
     const poll = async () => {
@@ -99,6 +112,7 @@ const WalletPage: React.FC = () => {
           }
         }
       } catch {
+        // transient -- keep polling silently
       }
     };
     poll();
@@ -108,7 +122,29 @@ const WalletPage: React.FC = () => {
     };
   }, [activeTopup, loadBalance, loadTransactions]);
 
-  if (!user) return <Navigate to="/" replace />;
+  // Never redirect here -- WalletPage is the one place a hard
+  // `<Navigate>`-on-render used to live in this app, which made it the
+  // only page capable of yanking someone back to Home mid-navigation if
+  // the auth store's `user` reference so much as flickered (e.g. a
+  // background token refresh in api-client.ts's response interceptor
+  // firing `setSession`/`logout` a tick after this page's first
+  // render). Rendering an inline prompt instead is strictly safer and
+  // matches the rest of the site's "login is optional, nothing gates
+  // hard" rule (see useAuth.ts's own doc comment).
+  if (!user) {
+    return (
+      <div className="max-w-md mx-auto px-5 py-20 text-center">
+        <div className="w-14 h-14 rounded-full bg-primary-soft text-primary flex items-center justify-center mx-auto mb-4">
+          <WalletIcon className="w-6 h-6" />
+        </div>
+        <h1 className="font-display font-bold text-xl mb-2">Log in to see your wallet</h1>
+        <p className="text-sm text-muted mb-6">Top up and pay for bookings with your balance once you're logged in.</p>
+        <Link to="/" className="btn-primary inline-flex items-center gap-2 px-5 py-2.5">
+          <LogIn className="w-4 h-4" /> Go to home to log in
+        </Link>
+      </div>
+    );
+  }
 
   const submitTopup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +185,18 @@ const WalletPage: React.FC = () => {
       </div>
 
       <ScaleIn>
-        <div className="card p-6 bg-primary text-white flex items-center justify-between">
+        {/* Deliberately NOT using the shared `.card` class here: .card
+            bakes in `bg-surface` (white), which sits in the same
+            Tailwind utilities layer as `bg-primary` -- combining both
+            on one element is a source-order cascade fight that
+            bg-surface silently wins, leaving this box plain white with
+            invisible white-on-white text. Replicating .card's
+            rounded/border/shadow by hand here, without its background,
+            avoids that fight entirely. */}
+        <div
+          className="rounded-md border border-slate-200/70 p-6 bg-primary text-white flex items-center justify-between"
+          style={{ boxShadow: 'var(--shadow-card)' }}
+        >
           <div>
             <div className="text-xs uppercase tracking-wide text-white/70 mb-1">Available balance</div>
             <div className="font-display font-bold text-3xl">

@@ -23,6 +23,11 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: false,
+  // Without this, a hung connection (dead wifi, backend wedged) leaves
+  // a caller's loading state spinning forever with no error to react
+  // to -- WalletPage's loading flags only ever clear in a `finally`
+  // block, which never runs if the request itself never settles.
+  timeout: 15000,
 });
 
 api.interceptors.request.use((config) => {
@@ -45,7 +50,14 @@ api.interceptors.response.use(
     const original = error.config;
     const { refreshToken, logout, setSession } = useAuth.getState();
 
-    if (error.response?.status !== 401 || !refreshToken || original?._retried) {
+    // `original` can legitimately be undefined for certain axios
+    // errors (e.g. a request aborted before its config was attached) --
+    // `original?._retried` above is optional-chained and evaluates to
+    // `undefined` (falsy) in that case, which does NOT satisfy this
+    // guard's `||` chain and would fall through to mutating
+    // `original.headers` below on an undefined value, throwing. Check
+    // `!original` explicitly so that case bails out cleanly instead.
+    if (!original || error.response?.status !== 401 || !refreshToken || original._retried) {
       return Promise.reject(error);
     }
     original._retried = true;
