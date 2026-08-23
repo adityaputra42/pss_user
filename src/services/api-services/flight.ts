@@ -4,6 +4,7 @@ import type {
   FareClass,
   FlightSearchResponse,
   AircraftSeat,
+  FlightSeat,
   ApiResponse,
   ListResponse,
 } from '../../types/api';
@@ -63,16 +64,14 @@ export const flightsApi = {
     return response.data.data ?? { trip_type: 'ONE_WAY', departure: [] };
   },
 
-  /**
-   * GET /flights/aircrafts/{id}/seats -- public. Full physical seat
-   * layout for the aircraft assigned to a flight. NOTE: this is not
-   * per-flight availability -- there is no public "which seats are
-   * already taken on flight X" endpoint. Occupied seats only surface
-   * as a 409 from POST /bookings/pnrs when a hold is attempted, so the
-   * seat picker must handle that conflict gracefully (see BookingPage).
-   */
+
   async getAircraftSeats(aircraftId: number): Promise<AircraftSeat[]> {
     const response = await api.get<ApiResponse<AircraftSeat[]>>(`/flights/aircrafts/${aircraftId}/seats`);
+    return response.data.data ?? [];
+  },
+
+  async getFlightSeats(flightId: number): Promise<FlightSeat[]> {
+    const response = await api.get<ApiResponse<FlightSeat[]>>(`/flights/instances/${flightId}/seats`);
     return response.data.data ?? [];
   },
 };

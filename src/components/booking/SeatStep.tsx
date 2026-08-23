@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { ChevronLeft, AlertTriangle } from 'lucide-react';
 
-import type { AircraftSeat, ItinerarySegment, PassengerFormInput, SeatSelectionInput } from '../../types/api';
+import type { FlightSeat, ItinerarySegment, PassengerFormInput, SeatSelectionInput } from '../../types/api';
 import { flightsApi } from '../../services/api-services';
 import SeatMap from './SeatMap';
 import Skeleton from '../animations/Skeleton';
@@ -23,13 +23,14 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
     [passengers],
   );
   const [activePax, setActivePax] = useState(nonInfantIdx[0] ?? 0);
-  const [seatsByAircraft, setSeatsByAircraft] = useState<Map<number, AircraftSeat[]>>(new Map());
+
+  const [seatsByFlight, setSeatsByFlight] = useState<Map<number, FlightSeat[]>>(new Map());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const aircraftIds = [...new Set(segments.map((s) => s.aircraft_id))];
-    Promise.all(aircraftIds.map((id) => flightsApi.getAircraftSeats(id).then((seats) => [id, seats] as const)))
-      .then((pairs) => setSeatsByAircraft(new Map(pairs)))
+    const flightIds = [...new Set(segments.map((s) => s.flight_id))];
+    Promise.all(flightIds.map((id) => flightsApi.getFlightSeats(id).then((seats) => [id, seats] as const)))
+      .then((pairs) => setSeatsByFlight(new Map(pairs)))
       .finally(() => setLoading(false));
   }, [segments]);
 
@@ -39,13 +40,14 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
     const m = new Map<string, number>();
     for (const sel of seatSelections) {
       if (sel.segment_index !== segIdx) continue;
-      const seat = [...seatsByAircraft.values()].flat().find((s) => s.id === sel.flight_seat_id);
+      const seat = [...seatsByFlight.values()].flat().find((s) => s.id === sel.flight_seat_id);
       if (seat) m.set(seat.seat_number, sel.passenger_index);
     }
     return m;
   };
 
-  const pickSeat = (seat: AircraftSeat) => {
+  const pickSeat = (seat: FlightSeat) => {
+    if (seat.status !== 'AVAILABLE') return; 
     const next = seatSelections.filter(
       (s) => !(s.segment_index === activeSegment && s.passenger_index === activePax) && s.flight_seat_id !== seat.id,
     );
@@ -62,7 +64,7 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
   };
 
   const seg = segments[activeSegment];
-  const seats = seatsByAircraft.get(seg?.aircraft_id) ?? [];
+  const seats = seatsByFlight.get(seg?.flight_id) ?? [];
   const assigned = assignedForSegment(activeSegment);
 
   const complete = segments.every((_, segIdx) =>
@@ -128,8 +130,8 @@ const SeatStep: React.FC<SeatStepProps> = ({ segments, passengers, seatSelection
 
         <p className="text-[11px] text-muted flex items-center gap-1.5 mt-3">
           <AlertTriangle className="w-3.5 h-3.5 text-accent shrink-0" />
-          This is the full seat map -- seats already booked by other passengers only get rejected when you submit,
-          so if a seat you picked turns out to be taken, you'll be asked to choose again for that leg.
+          Greyed-out seats are already taken on this flight. A seat can still occasionally be grabbed by someone
+          else in the moment between picking and submitting -- if that happens you'll be asked to choose again.
         </p>
       </div>
 

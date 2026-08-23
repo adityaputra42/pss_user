@@ -87,13 +87,6 @@ export interface FareClass {
   baggage_kg: number;
 }
 
-// ======================================================
-// AIRCRAFT SEAT LAYOUT
-// (used for seat-map display during booking -- see booking.ts note:
-// there is no per-flight "which seats are already taken" endpoint, so
-// this is the full physical layout; occupied seats surface only as a
-// 409 from the server when a hold is attempted.)
-// ======================================================
 
 export interface AircraftSeat {
   id: number;
@@ -103,8 +96,19 @@ export interface AircraftSeat {
   seat_letter: string;
   seat_class_id: number;
   seat_type: string;
-  /** Index of seat_letter within its row-group's letter string at generation time (e.g. "ABCDEF" -> A=0..F=5). Does NOT account for aisle gaps -- there's no aisle marker from the backend, just consecutive indices. */
   x_position: number | null;
+  is_exit_row: boolean;
+}
+
+export interface FlightSeat {
+  id: number;
+  flight_id: number;
+  status: string; // AVAILABLE | LOCKED | BOOKED | CHECKED_IN | BLOCKED
+  seat_number: string;
+  row_number: number;
+  seat_letter: string;
+  seat_class_id: number;
+  seat_type: string;
   is_exit_row: boolean;
 }
 

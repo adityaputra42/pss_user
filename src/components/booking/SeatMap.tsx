@@ -1,15 +1,14 @@
 import { Fragment, useMemo } from 'react';
 import clsx from 'clsx';
 import { Armchair } from 'lucide-react';
-import type { AircraftSeat } from '../../types/api';
+import type { FlightSeat } from '../../types/api';
 
 interface SeatMapProps {
-  seats: AircraftSeat[];
-  /** seat_number -> passenger index it's assigned to, for THIS segment only */
+  seats: FlightSeat[];
   assignedBy: Map<string, number>;
   activePassengerIndex: number;
   passengerLabels: string[];
-  onPick: (seat: AircraftSeat) => void;
+  onPick: (seat: FlightSeat) => void;
 }
 
 const KNOWN_CLUSTERS: Record<number, number[]> = {
@@ -41,7 +40,7 @@ const SeatMap: React.FC<SeatMapProps> = ({ seats, assignedBy, activePassengerInd
   const { rowNumbers, letters, gapAfter, seatByKey } = useMemo(() => {
     const rowSet = new Set<number>();
     const letterSet = new Set<string>();
-    const byKey = new Map<string, AircraftSeat>();
+    const byKey = new Map<string, FlightSeat>();
     for (const s of seats) {
       rowSet.add(s.row_number);
       letterSet.add(s.seat_letter);
@@ -54,7 +53,7 @@ const SeatMap: React.FC<SeatMapProps> = ({ seats, assignedBy, activePassengerInd
   }, [seats]);
 
   if (seats.length === 0) {
-    return <p className="text-sm text-muted py-6 text-center">No seat layout published for this aircraft yet.</p>;
+    return <p className="text-sm text-muted py-6 text-center">No seats available for this flight yet.</p>;
   }
 
   const renderCell = (row: number, letterIdx: number) => {
@@ -64,13 +63,15 @@ const SeatMap: React.FC<SeatMapProps> = ({ seats, assignedBy, activePassengerInd
 
     const takenByIdx = assignedBy.get(seat.seat_number);
     const isMine = takenByIdx === activePassengerIndex;
-    const isOther = takenByIdx !== undefined && !isMine;
+    const isTakenLocally = takenByIdx !== undefined && !isMine;
+    const isTakenOnFlight = seat.status !== 'AVAILABLE' && !isMine;
+    const isOther = isTakenLocally || isTakenOnFlight;
 
     return (
       <button
         type="button"
         disabled={isOther}
-        title={isOther ? `Taken by ${passengerLabels[takenByIdx!]}` : seat.seat_number}
+        title={isOther ? (isTakenLocally ? `Taken by ${passengerLabels[takenByIdx!]}` : 'Already taken') : seat.seat_number}
         onClick={() => onPick(seat)}
         className={clsx(
           'w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center transition-colors shrink-0',
