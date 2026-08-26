@@ -9,9 +9,10 @@ import PassengerStep from '../components/booking/PassengerStep';
 import SeatStep from '../components/booking/SeatStep';
 import ExtrasStep from '../components/booking/ExtrasStep';
 import ReviewStep from '../components/booking/ReviewStep';
+import PaymentStep from '../components/booking/PaymentStep';
 import Slide from '../components/animations/Slide';
 
-const stepLabels = ['Passengers', 'Seats', 'Extras', 'Review & pay'];
+const stepLabels = ['Passengers', 'Seats', 'Extras', 'Review', 'Payment'];
 
 const BookingPage: React.FC = () => {
   const { outboundItinerary, outboundFareClassId, returnItinerary, returnFareClassId, totalPax } = useBookingFlow();
@@ -109,7 +110,20 @@ const BookingPage: React.FC = () => {
               seatSelections={seatSelections}
               ancillarySelections={ancillarySelections}
               onBack={() => setStep(2)}
+              onNext={() => setStep(4)}
               onSeatConflict={() => setStep(1)}
+            />
+          )}
+
+          {step === 4 && (
+            <PaymentStep
+              outbound={outboundItinerary}
+              outboundFareClassId={outboundFareClassId}
+              ret={returnItinerary}
+              returnFareClassId={returnFareClassId}
+              passengers={passengers}
+              ancillarySelections={ancillarySelections}
+              onBack={() => setStep(3)}
             />
           )}
         </Slide>

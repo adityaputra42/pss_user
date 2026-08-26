@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ChevronLeft, Loader2, AlertCircle, Wallet, CreditCard, PlusCircle } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronLeft, Loader2, AlertCircle } from 'lucide-react';
 
 import type {
   ContactInput,
@@ -9,10 +8,9 @@ import type {
   SeatSelectionInput,
   SelectedAncillary,
 } from '../../types/api';
-import { bookingsApi, ancillariesApi, paymentsApi, walletApi } from '../../services/api-services';
+import { bookingsApi, ancillariesApi } from '../../services/api-services';
 import { formatMoney, formatDate, formatTime } from '../../utils/format';
 import { useBookingFlow } from '../../hooks/useBookingFlow';
-import { useAuth } from '../../hooks/useAuth';
 import BounceButton from '../animations/BounceButton';
 
 interface ReviewStepProps {
@@ -25,6 +23,7 @@ interface ReviewStepProps {
   seatSelections: SeatSelectionInput[];
   ancillarySelections: SelectedAncillary[];
   onBack: () => void;
+  onNext: () => void;
   onSeatConflict: () => void;
 }
 
@@ -38,31 +37,14 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   seatSelections,
   ancillarySelections,
   onBack,
+  onNext,
   onSeatConflict,
 }) => {
-  const navigate = useNavigate();
   const pnrInStore = useBookingFlow((s) => s.pnr);
   const setPnr = useBookingFlow((s) => s.setPnr);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [seatConflict, setSeatConflict] = useState(false);
-  const [insufficientBalance, setInsufficientBalance] = useState(false);
-
-  // Payment method choice: BALANCE is only ever offered to a logged-in
-  // person paying for the PNR they're about to create for themselves --
-  // never to a guest. This mirrors the backend's own rule exactly (see
-  // checkPNROwnershipForBalance server-side): there is no "pay on
-  // behalf" here, so a logged-in person always ends up owning the PNR
-  // they're currently building, and BALANCE is always valid for them
-  // once they have enough of it.
-  const user = useAuth((s) => s.user);
-  const [paymentMethod, setPaymentMethod] = useState<'DOKU_VA' | 'BALANCE'>('DOKU_VA');
-  const [balance, setBalance] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    walletApi.getBalance().then((b) => setBalance(b?.balance ?? '0')).catch(() => setBalance(null));
-  }, [user]);
 
   const outboundFare = outbound.fares.find((f) => f.fare_class_id === outboundFareClassId)!;
   const returnFare = ret && returnFareClassId ? ret.fares.find((f) => f.fare_class_id === returnFareClassId) : null;
@@ -72,28 +54,18 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
 
   const ticketTotal = fareTotal(outboundFare.prices) + (returnFare ? fareTotal(returnFare.prices) : 0);
   const ancillaryTotal = ancillarySelections.reduce((sum, s) => sum + Number(s.unitPrice) * s.quantity, 0);
-  const grandTotal = ticketTotal + ancillaryTotal;
-  const hasEnoughBalance = balance !== null && Number(balance) >= grandTotal;
 
   const segmentsPayload = [
     ...outbound.segments.map((s) => ({ flight_id: s.flight_id, fare_class_id: outboundFareClassId })),
     ...(ret && returnFareClassId ? ret.segments.map((s) => ({ flight_id: s.flight_id, fare_class_id: returnFareClassId })) : []),
   ];
 
-  const submit = async () => {
+   const submit = async () => {
     setSubmitting(true);
     setError('');
     setSeatConflict(false);
-    setInsufficientBalance(false);
     try {
-      // On a retry after a payment-stage failure (e.g. 402 insufficient
-      // balance), the PNR and any ancillaries from the FIRST attempt
-      // already exist server-side -- re-running createBooking here
-      // would create a second, duplicate PNR against the same seats
-      // (and very likely 409 immediately, since attempt #1 already
-      // holds them). Reuse the PNR already sitting in the booking flow
-      // store instead, and go straight to retrying payment.
-      let pnr = pnrInStore;
+       let pnr = pnrInStore;
       if (!pnr) {
         pnr = await bookingsApi.createBooking({
           contact,
@@ -104,10 +76,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         if (!pnr) throw new Error('Booking could not be created.');
         setPnr(pnr);
 
-        // flight_id is required here now -- it's the whitelist check
-        // (see ancillary.ts purchase() note). Each selection already
-        // knows which flight it was chosen for from ExtrasStep.
-        for (const sel of ancillarySelections) {
+         for (const sel of ancillarySelections) {
           if (sel.quantity <= 0) continue;
           await ancillariesApi.purchase({
             pnr_id: pnr.PNRID,
@@ -118,21 +87,11 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         }
       }
 
-      const payment = await paymentsApi.createPayment({ pnr_id: pnr.PNRID, payment_method: paymentMethod });
-      navigate('/confirmation', { state: { payment } });
+      onNext();
     } catch (err: any) {
       const status = err?.response?.status;
       const message = err?.response?.data?.message || err?.message || 'Something went wrong -- please try again.';
       if (status === 409) setSeatConflict(true);
-      // The booking (and any ancillaries) above already went through by
-      // the time a 402 can happen -- the PNR exists and is HOLD, just
-      // unpaid. Nudge toward DOKU instead of silently leaving them
-      // stuck on a method that will keep failing; the pnrInStore reuse
-      // above makes "press the button again" actually correct now.
-      if (status === 402) {
-        setInsufficientBalance(true);
-        setPaymentMethod('DOKU_VA');
-      }
       setError(message);
     } finally {
       setSubmitting(false);
@@ -180,52 +139,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         </div>
       </div>
 
-      {user && (
-        <div className="card p-5">
-          <h3 className="font-display font-bold mb-3">Pay with</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('DOKU_VA')}
-              className={`flex items-start gap-3 p-4 rounded-md border text-left transition-colors ${
-                paymentMethod === 'DOKU_VA' ? 'border-primary bg-primary-soft' : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <div className="text-sm font-semibold">Virtual account</div>
-                <div className="text-xs text-muted mt-0.5">Pay via bank transfer (DOKU)</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => hasEnoughBalance && setPaymentMethod('BALANCE')}
-              disabled={!hasEnoughBalance}
-              className={`flex items-start gap-3 p-4 rounded-md border text-left transition-colors ${
-                paymentMethod === 'BALANCE' ? 'border-primary bg-primary-soft' : 'border-slate-200 hover:border-slate-300'
-              } ${!hasEnoughBalance ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Wallet className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <div className="text-sm font-semibold">Wallet balance</div>
-                <div className="text-xs text-muted mt-0.5">
-                  {balance === null ? 'Loading…' : `${formatMoney(balance)} available`}
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {!hasEnoughBalance && balance !== null && (
-            <p className="text-xs text-muted mt-3 flex items-center gap-1.5">
-              <PlusCircle className="w-3.5 h-3.5" />
-              Not enough balance to cover {formatMoney(grandTotal)}.{' '}
-              <Link to="/wallet" className="text-primary font-semibold underline">Top up first</Link>, or pay via virtual account.
-            </p>
-          )}
-        </div>
-      )}
-
       {error && (
         <div
           className="rounded-md border border-red-200 p-4 bg-red-50/60 flex gap-2.5"
@@ -235,12 +148,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           <div className="text-sm text-red-700">
             {seatConflict ? (
               <>One of your seats was taken by someone else while you were booking. <button onClick={onSeatConflict} className="underline font-semibold">Go back and pick again</button>.</>
-            ) : insufficientBalance ? (
-              <>
-                Your balance wasn't enough to cover this payment, so your booking is on hold, unpaid.{' '}
-                <Link to="/wallet" className="underline font-semibold">Top up</Link>, or press &ldquo;Confirm and pay&rdquo;
-                again to pay via virtual account instead -- your seats are still held.
-              </>
             ) : (
               error
             )}
@@ -254,7 +161,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         </button>
         <BounceButton onClick={submit} disabled={submitting} className="btn-primary px-8 py-3 text-sm">
           {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-          {submitting ? 'Booking…' : 'Confirm and pay'}
+          {submitting ? 'Booking…' : 'Continue to payment'}
         </BounceButton>
       </div>
     </div>
