@@ -16,7 +16,6 @@ interface PaymentStepProps {
   returnFareClassId: number | null;
   passengers: PassengerFormInput[];
   ancillarySelections: SelectedAncillary[];
-  onBack: () => void;
 }
 
 const PaymentStep: React.FC<PaymentStepProps> = ({
@@ -26,12 +25,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   returnFareClassId,
   passengers,
   ancillarySelections,
-  onBack,
 }) => {
   const navigate = useNavigate();
   const pnr = useBookingFlow((s) => s.pnr);
+  const reset = useBookingFlow((s) => s.reset);
 
-    const user = useAuth((s) => s.user);
+  const user = useAuth((s) => s.user);
   const [paymentMethod, setPaymentMethod] = useState<'DOKU_VA' | 'BALANCE'>('DOKU_VA');
   const [balance, setBalance] = useState<string | null>(null);
 
@@ -44,6 +43,10 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     walletApi.getBalance().then((b) => setBalance(b?.balance ?? '0')).catch(() => setBalance(null));
   }, [user]);
 
+  useEffect(() => {
+    if (!pnr) navigate('/', { replace: true });
+  }, [pnr, navigate]);
+
   const outboundFare = outbound.fares.find((f) => f.fare_class_id === outboundFareClassId)!;
   const returnFare = ret && returnFareClassId ? ret.fares.find((f) => f.fare_class_id === returnFareClassId) : null;
 
@@ -55,22 +58,20 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const grandTotal = ticketTotal + ancillaryTotal;
   const hasEnoughBalance = balance !== null && Number(balance) >= grandTotal;
 
-  if (!pnr) {
-    onBack();
-    return null;
-  }
+  if (!pnr) return null;
 
   const pay = async () => {
     setSubmitting(true);
     setError('');
     setInsufficientBalance(false);
     try {
-       const payment = await paymentsApi.createPayment({ pnr_id: pnr.PNRID, payment_method: paymentMethod });
+      const payment = await paymentsApi.createPayment({ pnr_id: pnr.PNRID, payment_method: paymentMethod });
       navigate('/confirmation', { state: { payment } });
     } catch (err: any) {
       const status = err?.response?.status;
       const message = err?.response?.data?.message || err?.message || 'Something went wrong -- please try again.';
-       if (status === 402) {
+
+      if (status === 402) {
         setInsufficientBalance(true);
         setPaymentMethod('DOKU_VA');
       }
@@ -78,6 +79,15 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const abandonAndGoHome = () => {
+    const ok = window.confirm(
+      `Leave without paying? Booking ${pnr.BookingCode} stays on hold until it expires, but you won't be able to return to it here unless you saved the code.`,
+    );
+    if (!ok) return;
+    reset();
+    navigate('/');
   };
 
   return (
@@ -143,9 +153,6 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             </button>
           </div>
         ) : (
-          // Guests don't get a choice -- BALANCE requires a login -- but
-          // the payment method is still shown explicitly rather than
-          // implied, same as the logged-in view.
           <div className="flex items-start gap-3 p-4 rounded-md border border-primary bg-primary-soft text-left">
             <CreditCard className="w-4 h-4 text-primary shrink-0 mt-0.5" />
             <div>
@@ -190,8 +197,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       )}
 
       <div className="flex justify-between">
-        <button onClick={onBack} disabled={submitting} className="btn-secondary px-6 py-3 text-sm">
-          <ChevronLeft className="w-4 h-4" /> Back
+        <button onClick={abandonAndGoHome} disabled={submitting} className="btn-secondary px-6 py-3 text-sm">
+          <ChevronLeft className="w-4 h-4" /> Back to home
         </button>
         <BounceButton onClick={pay} disabled={submitting} className="btn-primary px-8 py-3 text-sm">
           {submitting && <Loader2 className="w-4 h-4 animate-spin" />}

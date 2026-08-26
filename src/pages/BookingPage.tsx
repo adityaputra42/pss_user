@@ -123,7 +123,6 @@ const BookingPage: React.FC = () => {
               returnFareClassId={returnFareClassId}
               passengers={passengers}
               ancillarySelections={ancillarySelections}
-              onBack={() => setStep(3)}
             />
           )}
         </Slide>

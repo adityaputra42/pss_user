@@ -20,6 +20,8 @@ const ResultsPage: React.FC = () => {
   const date = params.get('date') ?? '';
   const tripType = (params.get('tripType') as 'one_way' | 'round_trip') ?? 'one_way';
   const returnDate = params.get('returnDate') ?? undefined;
+  const seatClassIdParam = params.get('seatClassId');
+  const seatClassId = seatClassIdParam ? Number(seatClassIdParam) : undefined;
   const pax = {
     adults: Number(params.get('adults') ?? 1),
     children: Number(params.get('children') ?? 0),
@@ -52,6 +54,7 @@ const ResultsPage: React.FC = () => {
         totalPax: pax.adults + pax.children + pax.infants,
         tripType,
         returnDate,
+        seatClassId,
       }),
       fareClassesApi.getFareClasses(),
     ])
@@ -63,7 +66,7 @@ const ResultsPage: React.FC = () => {
       .catch((err) => setError(err?.response?.data?.message || 'Couldn\'t load flights. Try searching again.'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departureAirportId, arrivalAirportId, date, tripType, returnDate]);
+  }, [departureAirportId, arrivalAirportId, date, tripType, returnDate, seatClassId]);
 
   const needsReturn = tripType === 'round_trip';
   const canContinue =
