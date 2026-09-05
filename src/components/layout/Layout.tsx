@@ -15,6 +15,7 @@ import {
   LogOut,
   UserCircle,
   Wallet,
+  History,
 } from 'lucide-react';
 
 import PageTransition from '../animations/PageTransition';
@@ -356,6 +357,27 @@ const Layout: React.FC = () => {
                       <Wallet className="w-4 h-4" />
                     </button>
 
+                    {/* History -- login-only, hidden entirely for guests */}
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/history')}
+                      title="Booking history"
+                      aria-label="Booking history"
+                      className={`
+                        w-9
+                        h-9
+                        rounded-full
+                        flex
+                        items-center
+                        justify-center
+                        transition-all
+                        ${interactiveTextClassName}
+                      `}
+                    >
+                      <History className="w-4 h-4" />
+                    </button>
+
                     {/* Logout */}
 
                     <button
@@ -451,9 +473,6 @@ const Layout: React.FC = () => {
 
         {/* ==================================================
             MOBILE MENU
-
-            Separate from header so opening the menu does not
-            change the navbar height.
             ================================================== */}
 
         <AnimatePresence>
@@ -543,8 +562,7 @@ const Layout: React.FC = () => {
                     ================================================== */}
 
                 {user ? (
-                  <div className="flex items-center justify-between px-3 py-2">
-
+                  <div className="px-3 py-2 space-y-2">
                     <span
                       className={`
                         flex
@@ -578,8 +596,10 @@ const Layout: React.FC = () => {
                         }}
                         className="
                           btn-ghost
+                          flex-1
                           flex
                           items-center
+                          justify-center
                           gap-1.5
                           text-xs
                           px-3
@@ -589,6 +609,31 @@ const Layout: React.FC = () => {
                       >
                         <Wallet className="w-3.5 h-3.5" />
                         Wallet
+                      </button>
+
+                      {/* History -- login-only, hidden entirely for guests */}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          navigate('/history');
+                        }}
+                        className="
+                          btn-ghost
+                          flex-1
+                          flex
+                          items-center
+                          justify-center
+                          gap-1.5
+                          text-xs
+                          px-3
+                          py-2
+                          rounded-lg
+                        "
+                      >
+                        <History className="w-3.5 h-3.5" />
+                        History
                       </button>
 
                       {/* Logout */}
@@ -601,8 +646,10 @@ const Layout: React.FC = () => {
                         }}
                         className="
                           btn-ghost
+                          flex-1
                           flex
                           items-center
+                          justify-center
                           gap-1.5
                           text-xs
                           px-3

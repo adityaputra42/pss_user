@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ChevronLeft, AlertCircle } from 'lucide-react';
 
-import type { FareClass, Itinerary } from '../types/api';
-import { flightsApi, fareClassesApi } from '../services/api-services';
+import type { Airport, FareClass, Itinerary } from '../types/api';
+import { flightsApi, fareClassesApi, airportsApi } from '../services/api-services';
 import { useBookingFlow } from '../hooks/useBookingFlow';
 import ItineraryResultCard from '../components/search/ItineraryResultCard';
+import SearchForm from '../components/search/SearchForm';
 import Skeleton from '../components/animations/Skeleton';
 import StaggerContainer from '../components/animations/StagerContainer';
 import StaggerItem from '../components/animations/StaggerItem';
@@ -39,6 +40,12 @@ const ResultsPage: React.FC = () => {
   const [selReturnIdx, setSelReturnIdx] = useState<number | null>(null);
   const [selReturnFare, setSelReturnFare] = useState<number | null>(null);
 
+  const [airports, setAirports] = useState<Airport[]>([]);
+
+  useEffect(() => {
+    airportsApi.getAirports().then((r) => setAirports(r.Items));
+  }, []);
+
   useEffect(() => {
     if (!departureAirportId || !arrivalAirportId || !date) {
       setError('Missing search details -- go back and search again.');
@@ -65,7 +72,11 @@ const ResultsPage: React.FC = () => {
       })
       .catch((err) => setError(err?.response?.data?.message || 'Couldn\'t load flights. Try searching again.'))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    setSelOutboundIdx(null);
+    setSelOutboundFare(null);
+    setSelReturnIdx(null);
+    setSelReturnFare(null);
   }, [departureAirportId, arrivalAirportId, date, tripType, returnDate, seatClassId]);
 
   const needsReturn = tripType === 'round_trip';
@@ -83,75 +94,102 @@ const ResultsPage: React.FC = () => {
     navigate('/book');
   };
 
+  const fromAirport = airports.find((a) => a.id === departureAirportId) ?? null;
+  const toAirport = airports.find((a) => a.id === arrivalAirportId) ?? null;
+
   return (
-    <div className="max-w-4xl mx-auto px-5 md:px-8 py-8">
-      <button onClick={() => navigate(-1)} className="btn-ghost text-sm px-3 py-1.5 mb-4">
-        <ChevronLeft className="w-4 h-4" /> Modify search
-      </button>
+    <div className="w-full max-w-7xl mx-auto px-5 md:px-8 py-8">
+      <div className="mb-4">
+        <button onClick={() => navigate(-1)} className="btn-ghost text-sm px-3 py-1.5">
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+      </div>
+
+      <div className="w-full mb-8">
+        {airports.length === 0 ? (
+          <Skeleton className="h-40 w-full rounded-md" />
+        ) : (
+          <SearchForm
+            airports={airports}
+            initialTripType={tripType}
+            initialFrom={fromAirport}
+            initialTo={toAirport}
+            initialDate={date}
+            initialReturnDate={returnDate ?? ''}
+            initialPax={pax}
+            submitLabel="Update search"
+            onSubmitted={() => {}}
+          />
+        )}
+      </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="w-full space-y-3">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-24 w-full rounded-md" />
           ))}
         </div>
       ) : error ? (
-        <div className="card p-8 text-center">
+        <div className="card w-full p-8 text-center">
           <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
           <p className="text-sm text-muted mb-4">{error}</p>
           <Link to="/" className="btn-primary inline-flex px-5 py-2.5 text-sm">Back to search</Link>
         </div>
       ) : (
         <>
-          <section className="mb-8">
+          <section className="w-full mb-8">
             <h2 className="font-display font-bold text-xl mb-4">
               Departing flights {needsReturn && <span className="text-muted font-normal text-sm">(1 of 2)</span>}
             </h2>
             {departure.length === 0 ? (
               <p className="text-sm text-muted">No flights found for this route and date.</p>
             ) : (
-              <StaggerContainer className="space-y-3">
-                {departure.map((it, i) => (
-                  <StaggerItem key={i}>
-                    <ItineraryResultCard
-                      itinerary={it}
-                      fareClasses={fareClasses}
-                      pax={pax}
-                      selectedFareClassId={selOutboundIdx === i ? selOutboundFare : null}
-                      onSelect={(fareClassId) => {
-                        setSelOutboundIdx(i);
-                        setSelOutboundFare(fareClassId);
-                      }}
-                    />
-                  </StaggerItem>
-                ))}
+              <StaggerContainer className="w-full space-y-3">
+               {departure.map((it, i) => (
+  <StaggerItem key={i}>
+    <div className="w-full">
+      <ItineraryResultCard
+        itinerary={it}
+        fareClasses={fareClasses}
+        pax={pax}
+        selectedFareClassId={selOutboundIdx === i ? selOutboundFare : null}
+        onSelect={(fareClassId) => {
+          setSelOutboundIdx(i);
+          setSelOutboundFare(fareClassId);
+        }}
+      />
+    </div>
+  </StaggerItem>
+))}
               </StaggerContainer>
             )}
           </section>
 
           {needsReturn && (
-            <section className="mb-8">
+            <section className="w-full mb-8">
               <h2 className="font-display font-bold text-xl mb-4">
                 Return flights <span className="text-muted font-normal text-sm">(2 of 2)</span>
               </h2>
               {returning.length === 0 ? (
                 <p className="text-sm text-muted">No return flights found for this route and date.</p>
               ) : (
-                <StaggerContainer className="space-y-3">
-                  {returning.map((it, i) => (
-                    <StaggerItem key={i}>
-                      <ItineraryResultCard
-                        itinerary={it}
-                        fareClasses={fareClasses}
-                        pax={pax}
-                        selectedFareClassId={selReturnIdx === i ? selReturnFare : null}
-                        onSelect={(fareClassId) => {
-                          setSelReturnIdx(i);
-                          setSelReturnFare(fareClassId);
-                        }}
-                      />
-                    </StaggerItem>
-                  ))}
+                <StaggerContainer className="w-full space-y-3">
+                 {returning.map((it, i) => (
+  <StaggerItem key={i}>
+    <div className="w-full">
+      <ItineraryResultCard
+        itinerary={it}
+        fareClasses={fareClasses}
+        pax={pax}
+        selectedFareClassId={selOutboundIdx === i ? selOutboundFare : null}
+        onSelect={(fareClassId) => {
+          setSelOutboundIdx(i);
+          setSelOutboundFare(fareClassId);
+        }}
+      />
+    </div>
+  </StaggerItem>
+))}
                 </StaggerContainer>
               )}
             </section>

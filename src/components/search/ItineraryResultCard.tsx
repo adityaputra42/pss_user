@@ -56,7 +56,7 @@ const ItineraryResultCard: React.FC<ItineraryResultCardProps> = ({
             <div className="font-display font-bold text-lg">{formatTime(first.departure_time)}</div>
             <div className="text-xs text-muted">{first.departure_airport_code}</div>
           </div>
-          <div className="flex-1 flex flex-col items-center min-w-[80px]">
+          <div className="flex-1 flex flex-col items-center min-w-20">
             <div className="text-[11px] text-muted flex items-center gap-1">
               <Clock className="w-3 h-3" /> {formatDuration(itinerary.duration_minutes)}
             </div>

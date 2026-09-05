@@ -21,6 +21,15 @@ import BounceButton from '../animations/BounceButton';
 
 interface SearchFormProps {
   airports: Airport[];
+  initialTripType?: 'one_way' | 'round_trip';
+  initialFrom?: Airport | null;
+  initialTo?: Airport | null;
+  initialDate?: string;
+  initialReturnDate?: string;
+  initialPax?: PaxCounts;
+  initialCabinClass?: SeatClass | null;
+  submitLabel?: string;
+  onSubmitted?: () => void;
 }
 
 const todayISO = () =>
@@ -28,6 +37,15 @@ const todayISO = () =>
 
 const SearchForm: React.FC<SearchFormProps> = ({
   airports,
+  initialTripType = 'one_way',
+  initialFrom = null,
+  initialTo = null,
+  initialDate,
+  initialReturnDate = '',
+  initialPax,
+  initialCabinClass = null,
+  submitLabel,
+  onSubmitted,
 }) => {
   const navigate = useNavigate();
 
@@ -35,70 +53,48 @@ const SearchForm: React.FC<SearchFormProps> = ({
     (s) => s.setTotalPax,
   );
 
-  // --------------------------------------------------
-  // Trip
-  // --------------------------------------------------
 
   const [tripType, setTripType] = useState<
     'one_way' | 'round_trip'
-  >('one_way');
+  >(initialTripType);
 
-  // --------------------------------------------------
-  // Airport
-  // --------------------------------------------------
 
   const [from, setFrom] =
-    useState<Airport | null>(null);
+    useState<Airport | null>(initialFrom);
 
   const [to, setTo] =
-    useState<Airport | null>(null);
+    useState<Airport | null>(initialTo);
 
-  // --------------------------------------------------
-  // Date
-  // --------------------------------------------------
 
   const [date, setDate] =
-    useState(todayISO());
+    useState(initialDate || todayISO());
 
   const [returnDate, setReturnDate] =
-    useState('');
+    useState(initialReturnDate);
 
-  // --------------------------------------------------
-  // Passenger
-  // --------------------------------------------------
 
   const [pax, setPax] =
-    useState<PaxCounts>({
-      adults: 1,
-      children: 0,
-      infants: 0,
-    });
+    useState<PaxCounts>(
+      initialPax ?? {
+        adults: 1,
+        children: 0,
+        infants: 0,
+      },
+    );
 
-  // --------------------------------------------------
-  // Cabin Class
-  // --------------------------------------------------
 
 const [cabinClass, setCabinClass] =
-  useState<SeatClass | null>(null);
-  // --------------------------------------------------
-  // Error
-  // --------------------------------------------------
+  useState<SeatClass | null>(initialCabinClass);
 
   const [error, setError] =
     useState('');
 
-  // --------------------------------------------------
-  // Swap airport
-  // --------------------------------------------------
 
   const swap = () => {
     setFrom(to);
     setTo(from);
   };
 
-  // --------------------------------------------------
-  // Trip type
-  // --------------------------------------------------
 
   const handleTripTypeChange = (
     type: 'one_way' | 'round_trip',
@@ -112,9 +108,6 @@ const [cabinClass, setCabinClass] =
     }
   };
 
-  // --------------------------------------------------
-  // Departure date
-  // --------------------------------------------------
 
   const handleDateChange = (
     value: string,
@@ -123,8 +116,6 @@ const [cabinClass, setCabinClass] =
 
     setError('');
 
-    // Return date tidak boleh lebih awal
-    // dari departure date.
     if (
       returnDate &&
       returnDate < value
@@ -133,18 +124,12 @@ const [cabinClass, setCabinClass] =
     }
   };
 
-  // --------------------------------------------------
-  // Submit
-  // --------------------------------------------------
 
   const submit = (
     e: React.FormEvent<HTMLFormElement>,
   ) => {
     e.preventDefault();
 
-    // ----------------------------------------------
-    // Validate airport
-    // ----------------------------------------------
 
     if (!from || !to) {
       setError(
@@ -153,9 +138,6 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
-    // ----------------------------------------------
-    // Validate same airport
-    // ----------------------------------------------
 
     if (from.id === to.id) {
       setError(
@@ -164,9 +146,6 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
-    // ----------------------------------------------
-    // Validate return date
-    // ----------------------------------------------
 
     if (
       tripType === 'round_trip' &&
@@ -178,9 +157,6 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
-    // ----------------------------------------------
-    // Validate date
-    // ----------------------------------------------
 
     if (
       returnDate &&
@@ -192,9 +168,6 @@ const [cabinClass, setCabinClass] =
       return;
     }
 
-    // ----------------------------------------------
-    // Validate infant
-    // ----------------------------------------------
 
     if (pax.infants > pax.adults) {
       setError(
@@ -205,15 +178,9 @@ const [cabinClass, setCabinClass] =
 
     setError('');
 
-    // ----------------------------------------------
-    // Save passenger state
-    // ----------------------------------------------
 
     setTotalPax(pax);
 
-    // ----------------------------------------------
-    // Build query
-    // ----------------------------------------------
     const params = new URLSearchParams({
       from: String(from.id),
       to: String(to.id),
@@ -225,9 +192,6 @@ const [cabinClass, setCabinClass] =
       seatClassId: String(cabinClass?.id ?? ''),
     });
 
-    // ----------------------------------------------
-    // Return date only for round trip
-    // ----------------------------------------------
 
     if (tripType === 'round_trip') {
       params.set(
@@ -236,13 +200,12 @@ const [cabinClass, setCabinClass] =
       );
     }
 
-    // ----------------------------------------------
-    // Navigate
-    // ----------------------------------------------
 
     navigate(
       `/flights?${params.toString()}`,
     );
+
+    onSubmitted?.();
   };
 
   return (
@@ -250,9 +213,6 @@ const [cabinClass, setCabinClass] =
       onSubmit={submit}
       className="card"
     >
-      {/* ==================================================
-          TRIP TYPE
-          ================================================== */}
 
       <div className="flex items-center gap-1.5 px-5 pt-5">
         {(
@@ -470,7 +430,11 @@ const [cabinClass, setCabinClass] =
           <Search className="w-4 h-4" />
 
           <span className="md:hidden">
-            Search flights
+            {submitLabel ?? 'Search flights'}
+          </span>
+
+          <span className="hidden md:inline">
+            {submitLabel}
           </span>
         </BounceButton>
       </div>

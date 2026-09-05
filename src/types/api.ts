@@ -228,6 +228,34 @@ export interface PNR {
 }
 
 // ======================================================
+// TRANSACTION HISTORY (GET /bookings/pnrs/mine -- login required)
+// ======================================================
+
+export interface PNRSummary {
+  id: number;
+  booking_code: string;
+  status: string;
+  payment_status: string;
+  total_amount: string;
+  currency: string;
+  created_at: string;
+  expires_at?: string;
+}
+
+export interface ListPNRsQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+}
+
+export interface ListPNRsResult {
+  items: PNRSummary[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// ======================================================
 // PAYMENT
 // ======================================================
 
