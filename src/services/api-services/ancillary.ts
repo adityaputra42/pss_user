@@ -39,10 +39,14 @@ export const ancillariesApi = {
   },
 
   /**
-   * POST /ancillaries/purchases -- public. passenger_id/segment_id are
-   * still omitted here (guests can't know their PNR's internal
-   * passenger/segment IDs -- createBooking doesn't return them and PNR
-   * detail is auth-only), but flight_id is now REQUIRED in practice:
+   * POST /ancillaries/purchases -- public. As of ReviewStep's submit
+   * flow, segment_id IS now threaded through (createBooking's response
+   * includes segments[].id, matched here by flight_id). passenger_id is
+   * still never sent -- ExtrasStep has no per-passenger selection UI at
+   * all (ancillaries are sold against the whole PNR), so there is
+   * nothing real to attribute it to; don't default it to "the first
+   * passenger" without adding that picker first, since that would
+   * misattribute the purchase. flight_id IS required in practice:
    * omitting it skips the whitelist check server-side entirely, which
    * would silently let a guest buy something never configured for
    * their flight. Does NOT charge immediately -- picked up by the next

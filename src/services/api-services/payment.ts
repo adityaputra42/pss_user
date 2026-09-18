@@ -1,5 +1,5 @@
 import api from '../api-client';
-import type { ApiResponse, CreatePaymentInput, CreatePaymentResult, Payment } from '../../types/api';
+import type { ApiResponse, CreatePaymentInput, CreatePaymentResponse, Payment } from '../../types/api';
 
 export const paymentsApi = {
   /**
@@ -9,11 +9,12 @@ export const paymentsApi = {
    * just the PNR's own total_amount (see CreatePaymentHandler's
    * pendingCharges dependency server-side) -- so the intended order is
    * booking -> ancillaries (optional) -> payment, not the other way.
-   * Returns the VA number/expiry to pay against, not a status record --
-   * poll getLatestPaymentByPnr for that.
+   * Returns { payment, pnr } -- the VA number/expiry to pay against
+   * plus the refreshed PNR detail; not a payment status record, poll
+   * getLatestPaymentByPnr for that.
    */
-  async createPayment(payload: CreatePaymentInput): Promise<CreatePaymentResult | null> {
-    const response = await api.post<ApiResponse<CreatePaymentResult>>('/payments', payload);
+  async createPayment(payload: CreatePaymentInput): Promise<CreatePaymentResponse | null> {
+    const response = await api.post<ApiResponse<CreatePaymentResponse>>('/payments', payload);
     return response.data.data;
   },
 

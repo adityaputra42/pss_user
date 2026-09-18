@@ -218,13 +218,86 @@ export interface CreateBookingInput {
   hold_ttl_seconds?: number; // 0 -> server default (10 min)
 }
 
-export interface PNR {
-  PNRID: number;
-  BookingCode: string;
-  Status: string; // HOLD, BOOKED, CANCELLED, EXPIRED
-  ExpiresAt: string;
-  TotalAmount: number;
-  Currency: string;
+// ======================================================
+// PNR DETAIL -- response of POST /bookings/pnrs (create), GET
+// /bookings/pnrs/{id} (admin), and GET /bookings/pnrs/mine/{code}.
+//
+// Previously this mixed PascalCase (PNR-level fields, ancillaries) with
+// snake_case (passengers/segments/seats) because contract.PNRInfo and
+// PNRAncillaryInfo had no json tags. Fixed backend-side on 2026-09-18
+// (json tags added to both) -- everything below is now consistently
+// snake_case. HoldExpiresAt/CreatedBy use Go's `,omitempty` on a nil
+// pointer, so they're OMITTED from the response entirely when null,
+// not sent as `null` -- typed as optional (`?`) below, not `| null`.
+// ======================================================
+
+export interface PassengerDetail {
+  id: number;
+  passenger_type: PassengerType;
+  title: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  birth_date: string | null;
+  nationality: string;
+  document_type: string;
+  document_number: string;
+  document_expired_at: string | null;
+}
+
+export interface SegmentDetail {
+  id: number;
+  flight_id: number;
+  fare_class_id: number;
+  status: string; // segment status (BOOKED, ...)
+  flight_number: string;
+  departure_time: string;
+  arrival_time: string;
+  flight_status: string; // flight's own status (SCHEDULED, ...) -- distinct from `status` above
+}
+
+export interface SeatDetail {
+  passenger_id: number;
+  segment_id: number;
+  flight_seat_id: number;
+  seat_number: string;
+}
+
+/** One purchased ancillary as nested inside PNRDetail. NOT the same shape
+ * as AncillaryPurchase (the booking_ancillaries row returned by the
+ * ancillary module's own endpoints) below -- different struct/endpoint,
+ * even though both are now snake_case. passenger_id/segment_id are
+ * omitted (not null) when the add-on applies to the whole PNR / isn't
+ * tied to one segment (Go `,omitempty` on a nil pointer). */
+export interface PNRAncillaryDetail {
+  id: number;
+  passenger_id?: number;
+  segment_id?: number;
+  ancillary_code: string;
+  ancillary_name: string;
+  quantity: number;
+  unit_price: string;
+  total_price: string;
+  status: string; // ACTIVE, CANCELLED, USED
+  payment_status: string;
+}
+
+export interface PNRDetail {
+  id: number;
+  booking_code: string;
+  status: string; // HOLD, BOOKED, CANCELLED, EXPIRED
+  payment_status: string; // UNPAID, PENDING, PAID, FAILED, EXPIRED, REFUNDED
+  total_amount: string;
+  currency: string;
+  hold_expires_at?: string; // absent if the PNR isn't (or is no longer) in HOLD
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  created_by?: number; // absent for a guest booking
+  passengers: PassengerDetail[];
+  segments: SegmentDetail[];
+  seats: SeatDetail[];
+  ancillaries: PNRAncillaryDetail[];
 }
 
 // ======================================================
@@ -271,17 +344,30 @@ export interface Payment {
   PaidAt?: string | null;
 }
 
-/** POST /payments response -- distinct shape from the PaymentView above (this is what you actually pay against: the VA number, its expiry, and how the amount breaks down between the ticket and any ancillaries). */
-export interface CreatePaymentResult {
+/** The `payment` half of POST /payments' response -- the VA number, its
+ * expiry, and how the amount breaks down between the ticket and any
+ * ancillaries. Consistently snake_case (this struct has real json tags). */
+export interface PaymentInfo {
   payment_id: number;
   payment_code: string;
+  virtual_account_no: string;
   channel: string;
+  expired_at: string;
   amount: string;
   currency: string;
   ticket_portion: string;
   ancillary_portion: string;
-  virtual_account_no: string;
-  expired_at: string;
+}
+
+/** POST /payments response. As of the "update response booking" backend
+ * change, this is no longer a flat object -- it nests payment info under
+ * `payment` and the full PNR detail (same shape/casing caveats as
+ * PNRDetail above) under `pnr`, so the frontend doesn't need a second
+ * round trip right after paying. `pnr` is omitted (undefined) if the
+ * backend's own follow-up detail read failed -- treat it as optional. */
+export interface CreatePaymentResponse {
+  payment: PaymentInfo;
+  pnr?: PNRDetail;
 }
 
 /** POST /payments body. Public. `channel` is the DOKU payment channel (e.g. "VIRTUAL_ACCOUNT_BCA", "QRIS"); leave unset for the default. `payment_method` defaults to "DOKU_VA" if omitted; "BALANCE" requires login AND that this PNR belongs to the logged-in user -- never offer BALANCE to a guest or for someone else's PNR, the backend rejects both. */

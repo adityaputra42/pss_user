@@ -9,12 +9,16 @@ interface PassengerStepProps {
   onNext: () => void;
 }
 
-// DB column pnr_passengers.gender is CHAR(1) -- must send exactly 'M' or 'F',
-// not the full word (that's what was blowing up with "value too long for
-// type character(1)" on POST /bookings/pnrs).
 const genders: { code: string; label: string }[] = [
   { code: 'M', label: 'Male' },
   { code: 'F', label: 'Female' },
+];
+
+const titles = ['Mr.', 'Mrs.', 'Ms.', 'Mstr.', 'Miss'];
+
+const documentTypes = [
+  { code: 'KTP', label: 'KTP' },
+  { code: 'PASSPORT', label: 'Passport' },
 ];
 
 const PassengerStep: React.FC<PassengerStepProps> = ({ passengers, contact, onChangePassenger, onChangeContact, onNext }) => {
@@ -75,6 +79,21 @@ const PassengerStep: React.FC<PassengerStepProps> = ({ passengers, contact, onCh
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3 mt-3">
             <div className="field-shell">
               <div className="flex-1">
+                <label className="block text-[11px] font-medium text-muted uppercase tracking-wide">Title</label>
+                <select
+                  className="input-field font-medium"
+                  value={p.title ?? ''}
+                  onChange={(e) => onChangePassenger(i, { title: e.target.value || undefined })}
+                >
+                  <option value="">Select</option>
+                  {titles.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="field-shell">
+              <div className="flex-1">
                 <label className="block text-[11px] font-medium text-muted uppercase tracking-wide">First name</label>
                 <input
                   className="input-field font-medium"
@@ -119,6 +138,55 @@ const PassengerStep: React.FC<PassengerStepProps> = ({ passengers, contact, onCh
                 </select>
               </div>
             </div>
+            <div className="field-shell">
+              <div className="flex-1">
+                <label className="block text-[11px] font-medium text-muted uppercase tracking-wide">Nationality</label>
+                <input
+                  className="input-field font-medium"
+                  value={p.nationality ?? ''}
+                  onChange={(e) => onChangePassenger(i, { nationality: e.target.value })}
+                  placeholder="e.g. Indonesia"
+                />
+              </div>
+            </div>
+            <div className="field-shell">
+              <div className="flex-1">
+                <label className="block text-[11px] font-medium text-muted uppercase tracking-wide">Document type</label>
+                <select
+                  className="input-field font-medium"
+                  value={p.document_type ?? ''}
+                  onChange={(e) => onChangePassenger(i, { document_type: e.target.value || undefined })}
+                >
+                  <option value="">Select</option>
+                  {documentTypes.map((d) => (
+                    <option key={d.code} value={d.code}>{d.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="field-shell">
+              <div className="flex-1">
+                <label className="block text-[11px] font-medium text-muted uppercase tracking-wide">Document number</label>
+                <input
+                  className="input-field font-medium"
+                  value={p.document_number ?? ''}
+                  onChange={(e) => onChangePassenger(i, { document_number: e.target.value })}
+                />
+              </div>
+            </div>
+            {p.document_type && (
+              <div className="field-shell">
+                <div className="flex-1">
+                  <label className="block text-[11px] font-medium text-muted uppercase tracking-wide">Document expiry</label>
+                  <input
+                    type="date"
+                    className="input-field font-medium"
+                    value={p.document_expired_at ?? ''}
+                    onChange={(e) => onChangePassenger(i, { document_expired_at: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ))}

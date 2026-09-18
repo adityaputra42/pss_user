@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, Navigate, Link } from 'react-router-dom';
 import { CheckCircle2, Copy, Loader2, Ticket, AlertTriangle } from 'lucide-react';
 
-import type { CreatePaymentResult } from '../types/api';
+import type { CreatePaymentResponse } from '../types/api';
 import { paymentsApi } from '../services/api-services';
 import { useBookingFlow } from '../hooks/useBookingFlow';
 import { formatMoney } from '../utils/format';
@@ -13,7 +13,8 @@ const POLL_INTERVAL_MS = 5000;
 
 const ConfirmationPage: React.FC = () => {
   const location = useLocation();
-  const payment = (location.state as { payment: CreatePaymentResult | null } | undefined)?.payment ?? null;
+  const paymentResponse = (location.state as { payment: CreatePaymentResponse | null } | undefined)?.payment ?? null;
+  const payment = paymentResponse?.payment ?? null;
   const pnr = useBookingFlow((s) => s.pnr);
   const reset = useBookingFlow((s) => s.reset);
 
@@ -25,7 +26,7 @@ const ConfirmationPage: React.FC = () => {
     let cancelled = false;
     const poll = async () => {
       try {
-        const latest = await paymentsApi.getLatestPaymentByPnr(pnr.PNRID);
+        const latest = await paymentsApi.getLatestPaymentByPnr(pnr.id);
         if (!cancelled && latest) setStatus(latest.Status);
       } catch {
         // no payment yet / transient -- keep polling silently
@@ -42,7 +43,7 @@ const ConfirmationPage: React.FC = () => {
   if (!pnr || !payment) return <Navigate to="/" replace />;
 
   const copyCode = () => {
-    navigator.clipboard.writeText(pnr.BookingCode);
+    navigator.clipboard.writeText(pnr.booking_code);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
@@ -79,7 +80,7 @@ const ConfirmationPage: React.FC = () => {
         <div className="bg-slate-50 rounded-md p-4 mb-4">
           <div className="text-[11px] text-muted uppercase tracking-wide mb-1">Booking code</div>
           <button onClick={copyCode} className="font-display font-bold text-2xl tracking-widest inline-flex items-center gap-2">
-            {pnr.BookingCode}
+            {pnr.booking_code}
             <Copy className="w-4 h-4 text-muted" />
           </button>
           {copied && <div className="text-[11px] text-emerald-600 mt-1">Copied</div>}

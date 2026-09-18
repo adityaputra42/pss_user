@@ -1,9 +1,12 @@
 import api from '../api-client';
-import type { ApiResponse, CreateBookingInput, ListPNRsQuery, ListPNRsResult, PNR } from '../../types/api';
+import type { ApiResponse, CreateBookingInput, ListPNRsQuery, ListPNRsResult, PNRDetail } from '../../types/api';
 
 export const bookingsApi = {
-  async createBooking(payload: CreateBookingInput): Promise<PNR | null> {
-    const response = await api.post<ApiResponse<PNR>>('/bookings/pnrs', payload);
+  /** POST /bookings/pnrs. Returns the full PNRDetail (contact, passengers,
+   * segments, seats, ancillaries) -- not the old lightweight PNR summary --
+   * so the frontend doesn't need a second round trip right after booking. */
+  async createBooking(payload: CreateBookingInput): Promise<PNRDetail | null> {
+    const response = await api.post<ApiResponse<PNRDetail>>('/bookings/pnrs', payload);
     return response.data.data;
   },
 

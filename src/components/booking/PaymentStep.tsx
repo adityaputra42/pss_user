@@ -65,7 +65,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     setError('');
     setInsufficientBalance(false);
     try {
-      const payment = await paymentsApi.createPayment({ pnr_id: pnr.PNRID, payment_method: paymentMethod });
+      const payment = await paymentsApi.createPayment({ pnr_id: pnr.id, payment_method: paymentMethod });
       navigate('/confirmation', { state: { payment } });
     } catch (err: any) {
       const status = err?.response?.status;
@@ -83,7 +83,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
   const abandonAndGoHome = () => {
     const ok = window.confirm(
-      `Leave without paying? Booking ${pnr.BookingCode} stays on hold until it expires, but you won't be able to return to it here unless you saved the code.`,
+      `Leave without paying? Booking ${pnr.booking_code} stays on hold until it expires, but you won't be able to return to it here unless you saved the code.`,
     );
     if (!ok) return;
     reset();
@@ -99,16 +99,18 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             <Ticket className="w-4 h-4 text-primary shrink-0" />
             <div>
               <div className="text-xs text-muted">Booking code</div>
-              <div className="text-sm font-display font-bold tracking-widest">{pnr.BookingCode}</div>
+              <div className="text-sm font-display font-bold tracking-widest">{pnr.booking_code}</div>
             </div>
           </div>
           <span className="text-[11px] font-semibold uppercase tracking-wide px-2 py-1 rounded-sm bg-amber-50 text-amber-600 border border-amber-100">
-            {pnr.Status}
+            {pnr.status}
           </span>
         </div>
-        <p className="text-xs text-muted mt-3">
-          Your seats are held until {new Date(pnr.ExpiresAt).toLocaleString()}. Complete payment before then.
-        </p>
+        {pnr.hold_expires_at && (
+          <p className="text-xs text-muted mt-3">
+            Your seats are held until {new Date(pnr.hold_expires_at).toLocaleString()}. Complete payment before then.
+          </p>
+        )}
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
           <span className="font-display font-bold">Amount due</span>

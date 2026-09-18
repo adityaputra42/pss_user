@@ -78,10 +78,13 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
 
          for (const sel of ancillarySelections) {
           if (sel.quantity <= 0) continue;
+
+          const matchedSegment = pnr.segments.find((s) => s.flight_id === sel.flightId);
           await ancillariesApi.purchase({
-            pnr_id: pnr.PNRID,
+            pnr_id: pnr.id,
             ancillary_id: sel.ancillaryId,
             flight_id: sel.flightId,
+            segment_id: matchedSegment?.id,
             quantity: sel.quantity,
           });
         }

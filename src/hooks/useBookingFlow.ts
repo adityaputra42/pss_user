@@ -5,7 +5,7 @@ import type {
   PassengerFormInput,
   ContactInput,
   SeatSelectionInput,
-  PNR,
+  PNRDetail,
   PaxCounts,
 } from '../types/api';
 
@@ -23,14 +23,9 @@ interface BookingFlowState {
   passengers: PassengerFormInput[];
   contact: ContactInput | null;
 
-  // -- Step 4: seats, keyed "passengerIndex:segmentIndex" -> flight_seat_id --
   seatSelections: SeatSelectionInput[];
 
-  // -- Step 5: result of POST /bookings/pnrs. This IS the booking --
-  // there's no server-side lookup without login, so this object (plus
-  // whatever's shown right after payment) is the only record the guest
-  // has of their own trip.
-  pnr: PNR | null;
+  pnr: PNRDetail | null;
 
   setTotalPax: (v: PaxCounts) => void;
   setOutbound: (itinerary: Itinerary, fareClassId: number) => void;
@@ -38,7 +33,7 @@ interface BookingFlowState {
   setPassengers: (passengers: PassengerFormInput[]) => void;
   setContact: (contact: ContactInput) => void;
   setSeatSelections: (selections: SeatSelectionInput[]) => void;
-  setPnr: (pnr: PNR | null) => void;
+  setPnr: (pnr: PNRDetail | null) => void;
   reset: () => void;
 }
 
